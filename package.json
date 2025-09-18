@@ -1,12 +1,52 @@
 {
   "name": "zelpis",
+  "type": "module",
   "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@10.17.0",
   "description": "",
+  "author": "",
+  "license": "MIT",
+  "keywords": [],
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "upgradeDeps": "nlx taze",
+    "build": "nr -r build",
+    "dev": "nr -r dev",
+    "lint": "eslint --cache .",
+    "prepublishOnly": "nr build",
+    "docs": "pnpm -C docs run docs:dev",
+    "docs:build": "pnpm -C docs run docs:build",
+    "release": "bumpp -r && pnpm -r publish",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit",
+    "prepare": "simple-git-hooks"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "devDependencies": {
+    "@antfu/eslint-config": "catalog:dev",
+    "@antfu/ni": "catalog:dev",
+    "@antfu/utils": "catalog:dev",
+    "@commitlint/cli": "catalog:dev",
+    "@commitlint/config-conventional": "catalog:dev",
+    "@types/node": "catalog:types",
+    "bumpp": "catalog:dev",
+    "eslint": "catalog:dev",
+    "lint-staged": "catalog:dev",
+    "pkg-placeholder": "workspace:*",
+    "pnpm": "catalog:dev",
+    "simple-git-hooks": "catalog:dev",
+    "taze": "catalog:dev",
+    "tsx": "catalog:dev",
+    "typescript": "catalog:dev",
+    "unbuild": "catalog:dev",
+    "vite": "catalog:dev",
+    "vitest": "catalog:dev"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm lint-staged",
+    "commit-msg": "pnpm commitlint --edit $1"
+  },
+  "lint-staged": {
+    "*": "eslint --fix"
+  }
 }
