@@ -1,0 +1,7 @@
+.DS_Store
+.idea
+.git
+README.md
+build/
+node_modules/
+dist/
