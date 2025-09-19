@@ -11,5 +11,11 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["./template/**/*.ts", "./template/**/*.vue"]
+  "include": [
+    "./template/**/*.ts",
+    "./template/**/*.vue",
+    "./packages/**/*.ts",
+    "./packages/**/*.vue",
+    "./vite-env.d.ts"
+  ]
 }
