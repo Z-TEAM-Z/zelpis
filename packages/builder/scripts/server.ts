@@ -79,12 +79,14 @@ async function createServer() {
 
         const rendered = await render(props);
 
+        const moduleSrc = `/@fs/${entryFilePath.replace(/\\/g, '/')}`;
+
         const html = template
           .replace('<!-- app-head -->', rendered.head ?? '')
           .replace('<!-- app-html -->', rendered.html ?? '')
           .replace(
             '<!-- app-inject-script -->',
-            getInjectScript(entryFilePath, {
+            getInjectScript(moduleSrc, {
               props,
               rendered,
             }),

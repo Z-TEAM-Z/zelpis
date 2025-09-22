@@ -41,13 +41,12 @@
 </template>
 
 <script setup>
-import HeaderContainer from '@elpisWidgets/head-container/head-container';
+import HeaderContainer from '../../widgets/head-container/head-container.vue';
 import { ref, watch, onMounted, computed } from 'vue';
 import { ArrowDown } from '@element-plus/icons-vue';
-import { useMenuStore } from '@elpisStore/menu.js';
-import { useProjectStore } from '@elpisStore/project.js';
+import { useMenuStore } from '../../store/menu';
+import { useProjectStore } from '../../store/project';
 import { useRoute } from 'vue-router';
-import { ComponentRegistry } from '@befool/elpis/registry/ComponentRegistry';
 
 const menuStore = useMenuStore();
 const projectStore = useProjectStore();
@@ -65,9 +64,6 @@ const emit = defineEmits(['menu-select']);
 
 
 const setActiveMenuKey = () => {
-  if (!MenuComponent.value) {
-    return;
-  }
   const menuItem = menuStore.findMenuItem({
     key: 'key',
     value: route.query.key,

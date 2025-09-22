@@ -5,7 +5,7 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { useMenuStore } from '@elpisStore/menu';
+import { useMenuStore } from '../../store/menu';
 
 const route = useRoute();
 const menuStore = useMenuStore();

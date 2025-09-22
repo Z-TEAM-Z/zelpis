@@ -25,7 +25,7 @@
 
 <script setup>
 import { ref, inject } from 'vue';
-import $curl from '@elpisCommon/curl';
+import $curl from '../../../common/curl';
 
 const { api, components } = inject('schemaViewData');
 

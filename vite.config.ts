@@ -25,6 +25,10 @@ export default defineConfig({
           basePath: '/b/vue',
           entryPath: './b/entry.ts',
         },
+        {
+          basePath: '/dashboard',
+          entryPath: './dashboard/index.ts',
+        },
       ],
     }),
   ],

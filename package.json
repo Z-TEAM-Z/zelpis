@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "esno ./packages/builder/scripts/server.ts",
     "build": "esno ./packages/builder/scripts/build.ts",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "dev:csr": "vite dev --config ./vite.config.csr.ts --host"
   },
   "keywords": [],
   "author": "",
@@ -20,13 +21,16 @@
     "@vue/tsconfig": "^0.8.1",
     "esno": "^4.8.0",
     "fast-glob": "^3.3.3",
+    "less": "^4.4.1",
     "typescript": "^5.9.2",
     "vite": "^7.1.2"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^5.0.3",
     "@vitejs/plugin-vue": "^6.0.1",
+    "element-plus": "^2.11.3",
     "express": "^5.1.0",
+    "pinia": "^3.0.3",
     "pkg-types": "^2.3.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",

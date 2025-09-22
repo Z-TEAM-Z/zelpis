@@ -1,9 +1,24 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { mergeDsl } from '../render';
 
 export async function loadDsl(modelDir: string, dslName: string[]) {
-  const { default: baseDsl } = await import(path.resolve(modelDir));
+  function resolveIndexFile(targetPath: string) {
+    // If a directory is provided, resolve to an index file inside it
+    if (fs.existsSync(targetPath) && fs.statSync(targetPath).isDirectory()) {
+      const candidates = ['index.ts', 'index.js'];
+      for (const filename of candidates) {
+        const candidatePath = path.join(targetPath, filename);
+        if (fs.existsSync(candidatePath)) return candidatePath;
+      }
+    }
+    // If a direct file was passed, or nothing matched, return the original
+    return targetPath;
+  }
+
+  const basePath = resolveIndexFile(path.resolve(modelDir));
+  const { default: baseDsl } = await import(pathToFileURL(basePath).href);
 
   if (!(dslName && dslName.length)) {
     return baseDsl;
@@ -24,7 +39,8 @@ export async function loadDsl(modelDir: string, dslName: string[]) {
         if (!fs.existsSync(item)) {
           return {};
         }
-        return import(path.resolve(modelDir, item)).then((res) => res.default);
+        const resolved = resolveIndexFile(item);
+        return import(pathToFileURL(resolved).href).then((res) => res.default);
       }),
   );
 

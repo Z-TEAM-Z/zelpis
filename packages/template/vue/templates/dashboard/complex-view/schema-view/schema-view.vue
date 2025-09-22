@@ -19,8 +19,8 @@
 import { provide, ref } from 'vue';
 import SearchPanel from './complex-view/search-panel/search-panel.vue';
 import TablePanel from './complex-view/table-panel/table-panel.vue';
-import { useSchema } from './hook/schema.js';
-import ComponentConfig from './components/components-config.js';
+import { useSchema } from './hook/schema';
+import ComponentConfig from './components/components-config';
 
 const { api, tableSchema, tableConfig, searchSchema, searchConfig, components } = useSchema();
 

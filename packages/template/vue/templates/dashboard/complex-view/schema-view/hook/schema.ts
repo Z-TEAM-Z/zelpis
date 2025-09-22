@@ -1,17 +1,41 @@
 import { ref, watch, onMounted, nextTick } from 'vue';
 import { useRoute } from 'vue-router';
-import { useMenuStore } from '@elpisStore/menu';
+import { useMenuStore } from '../../../store/menu';
+
+interface SchemaProperty {
+  [key: string]: any;
+  options?: any;
+}
+
+interface Schema {
+  type: string;
+  properties: Record<string, SchemaProperty>;
+  required?: string[];
+}
+
+interface SchemaConfig {
+  api?: string;
+  schema?: Schema;
+  tableConfig?: any;
+  searchConfig?: any;
+  componentConfig?: Record<string, any>;
+}
+
+interface MenuItem {
+  key?: string;
+  schemaConfig?: SchemaConfig;
+}
 
 export const useSchema = () => {
   const route = useRoute();
   const menuStore = useMenuStore();
 
   const api = ref('');
-  const tableSchema = ref({});
+  const tableSchema = ref<Schema>({} as Schema);
   const tableConfig = ref();
-  const searchSchema = ref({});
+  const searchSchema = ref<Schema>({} as Schema);
   const searchConfig = ref();
-  const components = ref({});
+  const components = ref<Record<string, { schema: Schema; config: any }>>({});
 
   // 构造shemaConfig相关配置给schema-view用
   const buildData = () => {
@@ -19,7 +43,7 @@ export const useSchema = () => {
 
     const mItem = menuStore.findMenuItem({
       key: 'key',
-      value: sider_key ?? key,
+      value: (sider_key ?? key) as string,
     });
 
     if (mItem && mItem.schemaConfig) {
@@ -29,9 +53,9 @@ export const useSchema = () => {
 
       api.value = schemaConfig.api ?? '';
 
-      tableSchema.value = {};
+      tableSchema.value = {} as Schema;
       tableConfig.value = undefined;
-      searchSchema.value = {};
+      searchSchema.value = {} as Schema;
       searchConfig.value = undefined;
       components.value = {};
       nextTick(() => {
@@ -52,7 +76,7 @@ export const useSchema = () => {
         // 构造 components = { comKey: { schmea: {},config: {} } }
         const { componentConfig } = schemaConfig;
         if (componentConfig && Object.keys(componentConfig).length > 0) {
-          const dtoComponents = {};
+          const dtoComponents: Record<string, { schema: Schema; config: any }> = {};
           for (const comName in componentConfig) {
             dtoComponents[comName] = {
               schema: buildDtoSchema(configSchema, comName),
@@ -66,10 +90,10 @@ export const useSchema = () => {
   };
 
   // 通用构建Schema方法,清除噪音
-  const buildDtoSchema = (_schema, comName) => {
-    if (!_schema?.properties) return {};
+  const buildDtoSchema = (_schema: Schema, comName: string): Schema => {
+    if (!_schema?.properties) return { type: 'Object', properties: {} };
 
-    const dtoSchema = {
+    const dtoSchema: Schema = {
       type: 'Object',
       properties: {},
     };
@@ -78,7 +102,7 @@ export const useSchema = () => {
       const props = _schema.properties[key];
       // tableOptions就是table的配置
       if (props[`${comName}Options`]) {
-        let dtoProps = {};
+        let dtoProps: SchemaProperty = {};
         // 提取props中非options部分存在dtoSchema中
         for (const pKey in props) {
           if (pKey.indexOf('Options') < 0) {

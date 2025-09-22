@@ -6,7 +6,7 @@ register('SchemaButton', Button);
 
 // biome-ignore lint/style/noDefaultExport: any
 export default boot({
-  // type: 'csr',
+  type: 'csr',
   framework: 'react',
   Component: Root,
 });

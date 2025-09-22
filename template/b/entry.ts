@@ -5,7 +5,7 @@ import { router } from './router';
 
 // biome-ignore lint/style/noDefaultExport: any
 export default boot({
-  // type: 'csr',
+  type: 'csr',
   framework: 'vue',
   Component: App,
   mount(app) {
