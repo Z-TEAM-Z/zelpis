@@ -1,2 +1,2 @@
-export * from './define';
-export * from './merge';
+export * from './define.ts';
+export * from './merge.ts';

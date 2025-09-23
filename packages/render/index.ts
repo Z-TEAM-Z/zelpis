@@ -1,2 +1,2 @@
-export * from './boot';
-export * from './dsl';
+export * from './boot.ts';
+export * from './dsl/index.ts';

@@ -1,4 +1,5 @@
-module.exports = {
+import { defineDsl } from '../../../../../packages/render/index.ts';
+export default defineDsl({
   name: '拼多多',
   desc: '拼多多电商系统',
   homePage: '/todo?proj_key=pdd&key=product',
@@ -127,4 +128,4 @@ module.exports = {
       },
     },
   ],
-};
+});

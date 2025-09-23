@@ -1,4 +1,6 @@
-module.exports = {
+import { defineDsl } from '../../../../packages/render/index.ts';
+
+export default defineDsl({
   model: 'dashboard',
   name: '电商系统',
   menu: [
@@ -201,4 +203,4 @@ module.exports = {
       },
     },
   ],
-};
+});

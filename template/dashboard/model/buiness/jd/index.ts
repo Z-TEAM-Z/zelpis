@@ -1,4 +1,5 @@
-module.exports = {
+import { defineDsl } from '../../../../../packages/render/index.ts';
+export default defineDsl({
   name: '京东',
   desc: '京东电商系统',
   homePage: '/schema?proj_key=jd&key=product',
@@ -29,4 +30,4 @@ module.exports = {
       ],
     },
   ],
-};
+});

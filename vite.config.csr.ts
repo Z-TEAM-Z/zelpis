@@ -30,6 +30,7 @@ export default defineConfig({
         {
           basePath: '/dashboard',
           entryPath: './dashboard/index.ts',
+          dslPath: './dashboard/model/buiness'
         },
       ],
     }),

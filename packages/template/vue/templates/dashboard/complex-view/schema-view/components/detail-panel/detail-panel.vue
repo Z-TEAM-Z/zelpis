@@ -25,7 +25,7 @@
 
 <script setup>
 import { ref, inject } from 'vue';
-import $curl from '../../../common/curl';
+import $curl from '../../../common/curl.ts';
 
 const { api, components } = inject('schemaViewData');
 
