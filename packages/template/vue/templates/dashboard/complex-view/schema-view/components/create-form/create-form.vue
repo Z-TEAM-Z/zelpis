@@ -16,8 +16,8 @@
 
 <script setup>
 import { ref, inject } from 'vue';
-import SchemaForm from '../../../widgets/schema-form/schema-form.vue';
-import $curl from '../../../common/curl.ts';
+import SchemaForm from '@/widgets/schema-form/schema-form.vue';
+import $curl from '@/common/curl.ts';
 import { ElNotification } from 'element-plus';
 
 // 接收的参数

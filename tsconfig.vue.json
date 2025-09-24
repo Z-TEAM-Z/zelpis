@@ -3,6 +3,12 @@
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
 
+    /* Path Mapping */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./packages/template/vue/templates/dashboard/*"]
+    },
+
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,

@@ -6,7 +6,7 @@
 
 <script setup>
 import { inject } from 'vue';
-import SchemaSearchBar from '../../../widgets/schema-search-bar/schema-search-bar';
+import SchemaSearchBar from '@/widgets/schema-search-bar/schema-search-bar.vue';
 
 const { searchSchema } = inject('schemaViewData');
 

@@ -21,10 +21,10 @@
 </template>
 
 <script setup>
-import SiderContainer from '../../widgets/sider-container/sider-container';
+import SiderContainer from '@/widgets/sider-container/sider-container.vue';
 import { ref, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useMenuStore } from '../../store/menu';
+import { useMenuStore } from '@/store/menu';
 import SubMenu from './complex-view/sub-menu/sub-menu.vue';
 
 const router = useRouter();

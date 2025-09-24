@@ -11,8 +11,7 @@
         </template>
       </el-menu>
     </template>
-    <template #setting-content>
-      <!-- 根据projectStore的projectList的渲染 -->
+    <!-- <template #setting-content>
       <el-dropdown @command="handleProjectCommand">
         <span class="project-list">
           {{ projectName }}
@@ -33,7 +32,7 @@
         </template>
         <el-dropdown-menu slot="dropdown" />
       </el-dropdown>
-    </template>
+    </template> -->
     <template #main-content>
       <slot name="main-content" />
     </template>
@@ -41,16 +40,20 @@
 </template>
 
 <script setup>
-import HeaderContainer from '../../widgets/head-container/head-container.vue';
+import HeaderContainer from '@/widgets/head-container/head-container.vue';
 import { ref, watch, onMounted, computed } from 'vue';
 import { ArrowDown } from '@element-plus/icons-vue';
-import { useMenuStore } from '../../store/menu';
-import { useProjectStore } from '../../store/project';
+import { useMenuStore } from '@/store/menu';
+import { useProjectStore } from '@/store/project';
 import { useRoute } from 'vue-router';
+import SubMenu from './complex-view/sub-menu/sub-menu.vue';
+
 
 const menuStore = useMenuStore();
 const projectStore = useProjectStore();
 const route = useRoute();
+
+const activeMenuKey = ref('');
 
 
 defineProps({

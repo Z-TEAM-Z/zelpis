@@ -1,6 +1,5 @@
 import pinia from './store/index.ts';
 import './asserts/custom.css';
-import router from './router';
 
 // 引入elementui
 import ElementPlus from 'element-plus';
@@ -12,7 +11,8 @@ import 'element-plus/theme-chalk/dark/css-vars.css';
  * @param app 应用实例
  * @param libs 页面依赖的第三方包
  */
-export default (app: any, { libs }: { libs?: any[] } = {}) => {
+export default (app: any, { libs,router }: { libs?: any[],router?: any } = {}) => {
+console.log("🚀 ~ router:", router.getRoutes())
 
   // 应用elementui
   app.use(ElementPlus);

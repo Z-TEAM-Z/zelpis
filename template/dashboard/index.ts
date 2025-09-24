@@ -1,13 +1,19 @@
 import { boot } from '../../packages/render';
 
-import Dashboard from '../../packages/template/vue/templates/dashboard/index.vue';
-import root from '../../packages/template/vue/templates/dashboard/root';
+import Dashboard from '@/index.vue';
+import root from '@/root';
+import router,{ addDashboardRoute } from '@/router';
 
-console.log("🚀 ~ window.$zelpis:", window.$zelpis)
+addDashboardRoute({
+  path: 'todo',  // 会自动转换为 '/view/dashboard/custom-page'
+  name: 'Todo',
+  component: () => import('./pages/todo/todo.vue')
+})
+
 
 // biome-ignore lint/style/noDefaultExport: any
 export default boot({
   framework: 'vue',
   Component: Dashboard,
-  mount: root
+  mount: (app) => root(app, { router })
 });

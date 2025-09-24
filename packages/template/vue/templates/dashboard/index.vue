@@ -21,9 +21,17 @@ const route = useRoute();
 const projectName = ref('');
 const menuStore = useMenuStore();
 
+// 声明 dsl prop
+const props = defineProps({
+  dsl: {
+    type: Object,
+    default: () => ({})
+  }
+});
+
 
 onMounted(() => {
-  const { name, menu } = window.$zelpis?.hydrateData?.dsl || {};
+  const { name, menu } = props.dsl;
   projectName.value = name;
   menuStore.setMenuList(menu);
 })

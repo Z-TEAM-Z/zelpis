@@ -1,10 +1,10 @@
-import input from './complex-view/input/input';
-import select from './complex-view/select/select';
-import dynamicSelect from './complex-view/dynamic-select/dynamic-select';
-import dataRange from './complex-view/date-range/date-range';
+import input from './complex-view/input/input.vue';
+import select from './complex-view/select/select.vue';
+import dynamicSelect from './complex-view/dynamic-select/dynamic-select.vue';
+import dataRange from './complex-view/date-range/date-range.vue';
 
 // 业务拓展 search-item  配置
-import BusinessSearchItemConfig from '@businessSearchItemConfig';
+// import BusinessSearchItemConfig from '@businessSearchItemConfig';
 
 const SearchItemConfig = {
   // 输入框
@@ -27,5 +27,5 @@ const SearchItemConfig = {
 
 export default {
   ...SearchItemConfig,
-  ...BusinessSearchItemConfig,
+  // ...BusinessSearchItemConfig,
 };
