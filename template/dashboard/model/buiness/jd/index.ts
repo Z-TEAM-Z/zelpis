@@ -1,4 +1,4 @@
-import { defineDsl } from '../../../../../packages/render/index.ts';
+import { defineDsl } from '../../../../../packages/render';
 export default defineDsl({
   name: '京东',
   desc: '京东电商系统',

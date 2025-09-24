@@ -33,4 +33,11 @@ export default defineConfig({
       ],
     }),
   ],
+  resolve: {
+    // 配置路径别名
+    alias: {
+      // 键名是别名，值是对应的实际路径
+      '@': path.resolve(__dirname, './packages/template/vue/templates/dashboard'),
+    }
+  }
 });

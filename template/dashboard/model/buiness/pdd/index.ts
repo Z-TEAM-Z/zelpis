@@ -1,4 +1,4 @@
-import { defineDsl } from '../../../../../packages/render/index.ts';
+import { defineDsl } from '../../../../../packages/render';
 export default defineDsl({
   name: '拼多多',
   desc: '拼多多电商系统',

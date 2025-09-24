@@ -1,4 +1,4 @@
-import { defineDsl } from '../../../../packages/render/index.ts';
+import { defineDsl } from '../../../../packages/render';
 
 export default defineDsl({
   model: 'dashboard',

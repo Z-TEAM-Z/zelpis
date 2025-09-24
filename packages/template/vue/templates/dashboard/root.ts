@@ -1,4 +1,4 @@
-import pinia from './store/index.ts';
+import pinia from './store';
 import './asserts/custom.css';
 
 // 引入elementui

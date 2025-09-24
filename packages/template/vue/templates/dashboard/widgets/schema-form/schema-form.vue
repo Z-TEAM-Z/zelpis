@@ -18,10 +18,10 @@
 
 <script setup>
 import { toRefs, provide, ref } from 'vue';
+import Ajv from 'ajv';
 import FormItemConfig from './form-item-config';
 
-const Ajv = require('ajv');
-const ajv = new Ajv();
+const ajv = new Ajv({ strict: false });
 provide('ajv', ajv);
 
 // 属性
