@@ -1,7 +1,14 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { createJiti } from 'jiti'
 import { mergeDsl } from './merge'
+
+const jiti = createJiti('')
+
+async function jitiImport(id: string): Promise<{ default: any }> {
+  return jiti.import(id, { default: true }).then(res => ({ default: res }))
+}
 
 function resolveModuleEntry(fileOrDirPath: string): string {
   if (fs.existsSync(fileOrDirPath) && fs.statSync(fileOrDirPath).isDirectory()) {
@@ -17,7 +24,7 @@ function resolveModuleEntry(fileOrDirPath: string): string {
 
 export async function loadDsl(modelDir: string, dslName: string[]): Promise<Record<string, any>> {
   const resolvedPath = resolveModuleEntry(path.resolve(modelDir))
-  const { default: baseDsl } = await import(pathToFileURL(resolvedPath).href)
+  const { default: baseDsl } = await jitiImport(pathToFileURL(resolvedPath).href)
 
   if (!(dslName && dslName.length)) {
     return baseDsl
@@ -39,7 +46,7 @@ export async function loadDsl(modelDir: string, dslName: string[]): Promise<Reco
           return {}
         }
         const itemPath = resolveModuleEntry(path.resolve(modelDir, item))
-        return import(pathToFileURL(itemPath).href).then(res => res.default)
+        return jitiImport(pathToFileURL(itemPath).href).then(res => res.default)
       }),
   )
 

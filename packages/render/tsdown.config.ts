@@ -7,4 +7,5 @@ export default createTsdownConfig({
     'dsl/server': 'dsl/server.ts',
     'plugins': 'plugins/index.ts',
   },
+  external: ['jiti', 'ts-dedent'],
 })

@@ -114,11 +114,11 @@ export async function buildPlugin(_option?: BuilderPluginOption): Promise<Plugin
               .replace('<!-- app-inject-script -->', getInjectScript(item.entryPath, { props: { dsl: content } })),
           )
 
-          if (dslName === '.') {
+          if (dslName !== '.') {
             htmlEntrys.push(entry)
           }
 
-          input[`${name}/${dslName}`] = entry
+          input[`${name ? `${name}/` : ''}${dslName}`] = entry
         })
 
         return input
