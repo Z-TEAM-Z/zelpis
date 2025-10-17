@@ -4,23 +4,27 @@
   "version": "1.0.0",
   "private": true,
   "packageManager": "pnpm@10.17.0",
-  "description": "",
+  "description": "A DSL-driven frontend rendering framework",
   "author": "",
   "license": "MIT",
-  "keywords": [],
+  "keywords": [
+    "dsl",
+    "ssr",
+    "react",
+    "vue",
+    "vite"
+  ],
   "main": "index.js",
   "scripts": {
-    "upgradeDeps": "nlx taze",
-    "build": "nr -r build",
-    "dev": "nr -r dev",
-    "lint": "eslint --cache .",
-    "prepublishOnly": "nr build",
-    "docs": "pnpm -C docs run docs:dev",
-    "docs:build": "pnpm -C docs run docs:build",
-    "release": "bumpp -r && pnpm -r publish",
+    "build": "pnpm -r --filter './packages/*' run build",
+    "dev": "pnpm -r --parallel --filter './packages/*' run dev",
     "test": "vitest",
     "typecheck": "tsc --noEmit",
-    "prepare": "simple-git-hooks"
+    "lint": "eslint --cache .",
+    "prepublishOnly": "pnpm build"
+  },
+  "dependencies": {
+    "tsdown": "catalog:dev"
   },
   "devDependencies": {
     "@antfu/eslint-config": "catalog:dev",

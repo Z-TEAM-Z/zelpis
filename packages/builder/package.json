@@ -1,0 +1,35 @@
+{
+  "name": "@zelpis/builder",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./builder-plugin": {
+      "types": "./dist/builder-plugin.d.ts",
+      "import": "./dist/builder-plugin.js"
+    }
+  },
+  "main": "./dist/builder-plugin.js",
+  "types": "./dist/builder-plugin.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch"
+  },
+  "peerDependencies": {
+    "vite": "catalog:dev"
+  },
+  "dependencies": {
+    "@zelpis/render": "workspace:*",
+    "@zelpis/shared": "workspace:*",
+    "fast-glob": "catalog:dev",
+    "pkg-types": "catalog:dev"
+  },
+  "devDependencies": {
+    "tsdown": "catalog:dev"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "name": "@zelpis/core",
+  "type": "module",
+  "version": "0.0.1",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./builder": {
+      "types": "./dist/builder.d.ts",
+      "import": "./dist/builder.js"
+    },
+    "./plugins": {
+      "types": "./dist/plugins.d.ts",
+      "import": "./dist/plugins.js"
+    },
+    "./dsl": {
+      "types": "./dist/dsl.d.ts",
+      "import": "./dist/dsl.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsdown"
+  },
+  "peerDependencies": {
+    "vite": "catalog:dev"
+  },
+  "dependencies": {
+    "@zelpis/builder": "workspace:*",
+    "@zelpis/render": "workspace:*",
+    "@zelpis/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "tsdown": "catalog:dev"
+  }
+}

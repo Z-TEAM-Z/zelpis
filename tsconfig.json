@@ -1,17 +1,41 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
-    "lib": ["ESNext"],
+    "target": "ES2022",
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "baseUrl": ".",
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "paths": {
+      "@zelpis/shared": ["packages/shared"],
+      "@zelpis/render": ["packages/render"],
+      "@zelpis/render/*": ["packages/render/*"],
+      "@zelpis/builder": ["packages/builder"],
+      "@zelpis/builder/*": ["packages/builder/*"],
+      "@zelpis/core": ["packages/core"]
     },
     "resolveJsonModule": true,
     "strict": true,
-    "strictNullChecks": true,
-    "noEmit": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "skipDefaultLibCheck": true,
     "skipLibCheck": true
-  }
+  },
+  "include": [
+    "packages/**/*.ts",
+    "packages/**/*.tsx",
+    "examples/**/*.ts",
+    "examples/**/*.tsx",
+    "examples/**/*.vue",
+    "tsdown.config.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/node_modules",
+    "**/dist",
+    "**/scripts"
+  ]
 }

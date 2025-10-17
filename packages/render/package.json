@@ -1,0 +1,50 @@
+{
+  "name": "@zelpis/render",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./plugins": {
+      "types": "./dist/plugins.d.ts",
+      "import": "./dist/plugins.js"
+    },
+    "./dsl": {
+      "types": "./dist/dsl.d.ts",
+      "import": "./dist/dsl.js"
+    },
+    "./dsl/server": {
+      "types": "./dist/dsl/server.d.ts",
+      "import": "./dist/dsl/server.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18",
+    "vite": "catalog:dev",
+    "vue": ">=3"
+  },
+  "peerDependenciesMeta": {
+    "react": { "optional": true },
+    "react-dom": { "optional": true },
+    "vue": { "optional": true }
+  },
+  "dependencies": {
+    "@zelpis/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:types",
+    "@types/react-dom": "catalog:types",
+    "tsdown": "catalog:dev"
+  }
+}

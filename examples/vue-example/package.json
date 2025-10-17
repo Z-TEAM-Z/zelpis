@@ -1,0 +1,23 @@
+{
+  "name": "vue-example",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@vitejs/plugin-vue": "catalog:frontend",
+    "@zelpis/core": "workspace:*",
+    "vue": "catalog:frontend",
+    "vue-router": "catalog:frontend"
+  },
+  "devDependencies": {
+    "@vue/tsconfig": "catalog:types",
+    "esno": "catalog:dev",
+    "typescript": "catalog:dev",
+    "vite": "catalog:dev"
+  }
+}
