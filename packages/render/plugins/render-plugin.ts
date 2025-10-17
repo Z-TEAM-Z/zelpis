@@ -1,36 +1,20 @@
+import type { ZElpisConfig } from '@zelpis/builder'
 import type { Plugin } from 'vite'
 import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
+import { dedent } from 'ts-dedent'
 import { mergeDsl } from '../dsl/merge'
-
-function dedent(strings: TemplateStringsArray, ...values: any[]): string {
-  const full = strings.reduce((acc, s, i) => acc + s + (i < values.length ? String(values[i]) : ''), '')
-  const lines = full.replace(/\r\n/g, '\n').split('\n')
-  const trimmed = lines[0].trim() === '' ? lines.slice(1) : lines
-  const indents = trimmed
-    .filter(l => l.trim().length)
-    .map(l => l.match(/^\s*/)?.[0].length ?? 0)
-  const min = indents.length ? Math.min(...indents) : 0
-  return trimmed.map(l => l.slice(min)).join('\n').replace(/\n\s+$/, '\n')
-}
 
 const PLUGIN_NAME = 'zelpis-render-plugin'
 
 const VIRTUAL_MODULE_ID = 'virtual:zelpis/render-config'
 
-interface Entry {
-  basePath: string
-  entryPath: string
-  dslPath?: string
-}
-
 interface RenderPluginOption {
   baseDir?: string
-  entrys: Entry[]
 }
 
-function parseOption(option: RenderPluginOption): RenderPluginOption {
+function parseOption(option: ZElpisConfig & RenderPluginOption): ZElpisConfig {
   option.entrys.forEach((entry) => {
     const baseDir = option.baseDir || process.cwd()
     entry.entryPath = path.resolve(baseDir, entry.entryPath)
@@ -45,7 +29,7 @@ function parseOption(option: RenderPluginOption): RenderPluginOption {
 export function renderPlugin(option: RenderPluginOption): Plugin {
   const resolveVirtualModuleId = `\0${VIRTUAL_MODULE_ID}`
 
-  const parsedConfig = parseOption(option)
+  const parsedConfig: ZElpisConfig & RenderPluginOption = {} as any
 
   function getInjectScript(entryPath: string, props: Record<string, unknown>): string {
     return dedent`
@@ -60,8 +44,9 @@ export function renderPlugin(option: RenderPluginOption): Plugin {
     name: PLUGIN_NAME,
     enforce: 'pre',
     config(config) {
-      ;(config as any).$zelpis ||= {}
-      ;(config as any).$zelpis.renderConfig = parsedConfig
+      const zelpisConfig = parseOption({ ...option, ...config.zelpis || {} as any })
+      config.zelpis = zelpisConfig
+      Object.assign(parsedConfig, zelpisConfig)
     },
     resolveId(id) {
       if (id === VIRTUAL_MODULE_ID) {
@@ -78,8 +63,8 @@ export function renderPlugin(option: RenderPluginOption): Plugin {
       const rootDir = server.config.root || process.cwd()
       const htmlTemplate = fs.readFileSync(path.resolve(rootDir, 'index.html'), 'utf-8')
 
-      const { renderConfig } = (server.config as any).$zelpis || {}
-      if (!renderConfig) {
+      const zelpisConfig = server.config.zelpis! || {}
+      if (!zelpisConfig) {
         throw new Error('Zelpis render config not found')
       }
 
@@ -95,7 +80,10 @@ export function renderPlugin(option: RenderPluginOption): Plugin {
         return fileOrDirPath
       }
 
-      async function checkDslExists(modelDir: string, dslName: string[]): Promise<boolean> {
+      async function checkDslExists(modelDir: string | undefined, dslName: string[]): Promise<boolean> {
+        if (!modelDir) {
+          return false
+        }
         if (!dslName || dslName.length === 0) {
           // 检查根目录的 index 文件
           const baseEntry = resolveModuleEntry(path.resolve(modelDir))
@@ -129,7 +117,7 @@ export function renderPlugin(option: RenderPluginOption): Plugin {
       async function loadDslWithVite(modelDir: string, dslName: string[]): Promise<Record<string, any>> {
         const baseEntry = resolveModuleEntry(path.resolve(modelDir))
         const baseMod = await server.ssrLoadModule(baseEntry)
-        const baseDsl = (baseMod as any).default
+        const baseDsl = baseMod.default
 
         if (!(dslName && dslName.length))
           return baseDsl
@@ -150,14 +138,14 @@ export function renderPlugin(option: RenderPluginOption): Plugin {
               return {}
             const itemPath = resolveModuleEntry(path.resolve(modelDir, p))
             const m = await server.ssrLoadModule(itemPath)
-            return (m as any).default ?? {}
+            return m.default ?? {}
           }),
         )
 
         return mergeDsl(baseDsl, ...nameDslList)
       }
 
-      for (const entry of renderConfig.entrys as any[]) {
+      for (const entry of zelpisConfig.entrys) {
         const basePath = entry.basePath || '/'
         const entryFilePath = path.resolve(entry.entryPath)
 
@@ -186,7 +174,7 @@ export function renderPlugin(option: RenderPluginOption): Plugin {
             }
 
             // 使用 Vite 的 ssrLoadModule 加载 DSL，避免 .ts 扩展名问题
-            const dsl = await loadDslWithVite(entry.dslPath, dslName)
+            const dsl = await loadDslWithVite(entry.dslPath!, dslName)
 
             const template = await server.transformIndexHtml(url, htmlTemplate, req.originalUrl)
             // const {

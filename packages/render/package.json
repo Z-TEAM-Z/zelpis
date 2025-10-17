@@ -40,7 +40,8 @@
     "vue": { "optional": true }
   },
   "dependencies": {
-    "@zelpis/shared": "workspace:*"
+    "@zelpis/shared": "workspace:*",
+    "ts-dedent": "catalog:dev"
   },
   "devDependencies": {
     "@types/react": "catalog:types",

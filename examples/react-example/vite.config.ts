@@ -1,9 +1,8 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import viteReact from '@vitejs/plugin-react'
+import { buildPlugin, renderPlugin } from '@zelpis/core/plugins'
 import { defineConfig } from 'vite'
-import { buildPlugin } from '../../packages/builder/builder-plugin'
-import { renderPlugin } from '../../packages/render/plugins/render-plugin'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -13,13 +12,16 @@ export default defineConfig({
     buildPlugin(),
     renderPlugin({
       baseDir: './',
-      entrys: [
-        {
-          basePath: '/',
-          entryPath: path.resolve(__dirname, './entry.ts'),
-          dslPath: './model',
-        },
-      ],
+
     }),
   ],
+  zelpis: {
+    entrys: [
+      {
+        basePath: '/',
+        entryPath: path.resolve(__dirname, './entry.ts'),
+        dslPath: './model',
+      },
+    ],
+  },
 })

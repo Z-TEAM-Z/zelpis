@@ -13,9 +13,11 @@
       "import": "./dist/builder-plugin.js"
     }
   },
-  "main": "./dist/builder-plugin.js",
-  "types": "./dist/builder-plugin.d.ts",
-  "files": ["dist"],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch"
@@ -27,7 +29,8 @@
     "@zelpis/render": "workspace:*",
     "@zelpis/shared": "workspace:*",
     "fast-glob": "catalog:dev",
-    "pkg-types": "catalog:dev"
+    "pkg-types": "catalog:dev",
+    "ts-dedent": "catalog:dev"
   },
   "devDependencies": {
     "tsdown": "catalog:dev"

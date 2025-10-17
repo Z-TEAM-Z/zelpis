@@ -76,13 +76,13 @@ export async function buildPlugin(_option?: BuilderPluginOption): Promise<Plugin
         fs.mkdirSync(htmlTempDir, { recursive: true })
       }
 
-      const $zelpis = config.$zelpis
+      const zelpisConfig = config.zelpis
 
-      if (!$zelpis?.renderConfig) {
+      if (!zelpisConfig) {
         throw new Error('Zelpis render config not found')
       }
 
-      const { entrys } = $zelpis.renderConfig
+      const { entrys } = zelpisConfig
 
       const inputObj = (
         await Promise.all(
