@@ -12,7 +12,6 @@ export default defineConfig({
     buildPlugin(),
     renderPlugin({
       baseDir: './',
-
     }),
   ],
   zelpis: {

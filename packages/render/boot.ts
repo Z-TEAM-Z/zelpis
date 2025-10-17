@@ -1,5 +1,6 @@
 import type { Root } from 'react-dom/client'
 import type { App } from 'vue'
+import { once } from '@zelpis/shared'
 
 interface BaseBootOption {
   type?: 'csr' | 'ssr'
@@ -118,10 +119,10 @@ function ssrRenderer(option: BootOption): { option: BootOption, render: (props: 
   }
 }
 
-export function boot(option: BootOption): any {
+export const boot: (option: BootOption) => any = once((option: BootOption): any => {
   if (!import.meta.env.SSR || option.type === 'csr') {
     return csrRenderer(option)
   }
 
   return ssrRenderer(option)
-}
+})

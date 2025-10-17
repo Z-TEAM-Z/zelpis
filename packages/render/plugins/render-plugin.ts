@@ -158,6 +158,10 @@ export function renderPlugin(option: RenderPluginOption): Plugin {
             if (url.includes('.') && !url.endsWith('/')) {
               return next()
             }
+            // 跳过 Vite 的内部请求
+            if (url.startsWith('/@')) {
+              return next()
+            }
 
             // 仅处理命中的 basePath
             if (!url.startsWith(basePath))

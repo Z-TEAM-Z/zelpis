@@ -13,13 +13,15 @@ export default defineConfig({
     buildPlugin(),
     renderPlugin({
       baseDir: './',
-      entrys: [
-        {
-          basePath: '/',
-          entryPath: path.resolve(__dirname, './entry.ts'),
-          dslPath: './model',
-        },
-      ],
     }),
   ],
+  zelpis: {
+    entrys: [
+      {
+        basePath: '/',
+        entryPath: path.resolve(__dirname, './entry.ts'),
+        dslPath: './model',
+      },
+    ],
+  },
 })
