@@ -1,4 +1,4 @@
-export * from './builder-plugin'
+export * from './plugins/builder-plugin'
 
 interface Entry {
   basePath: string
