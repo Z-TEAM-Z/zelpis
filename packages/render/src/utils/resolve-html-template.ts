@@ -17,12 +17,15 @@ export function resolveHtmlTemplate(options: ResolveHtmlOptions): string {
   if (htmlConfig.template) {
     const templatePath = path.resolve(rootDir, htmlConfig.template)
     if (fs.existsSync(templatePath)) {
-      return fs.readFileSync(templatePath, 'utf-8')
+      const content = fs.readFileSync(templatePath, 'utf-8')
+      validateHtmlTemplate(content, `template file: ${htmlConfig.template}`)
+      return content
     }
   }
 
   // 使用字符串模板自定义 HTML
   if (htmlConfig.custom) {
+    validateHtmlTemplate(htmlConfig.custom, 'custom HTML string')
     return htmlConfig.custom
   }
 
@@ -31,11 +34,8 @@ export function resolveHtmlTemplate(options: ResolveHtmlOptions): string {
     return generateHtmlFromConfig(htmlConfig)
   }
 
-  // 默认回退到 index.html
-  const defaultPath = path.resolve(rootDir, 'index.html')
-  return fs.existsSync(defaultPath)
-    ? fs.readFileSync(defaultPath, 'utf-8')
-    : getDefaultHtmlTemplate()
+  // 返回默认模板
+  return getDefaultHtmlTemplate()
 }
 
 function generateHtmlFromConfig(config: HtmlConfig): string {
@@ -73,4 +73,15 @@ function getDefaultHtmlTemplate(): string {
 						<!-- app-inject-script -->
 					</body>
 					</html>`
+}
+
+function validateHtmlTemplate(html: string, source: string): void {
+  const REQUIRED_PLACEHOLDER = '<!-- app-inject-script -->'
+
+  if (!html.includes(REQUIRED_PLACEHOLDER)) {
+    console.warn(
+      `\x1B[33m[Zelpis Warning]\x1B[0m Missing required placeholder "${REQUIRED_PLACEHOLDER}" in ${source}.\n`
+      + `The application scripts will not be injected properly. Please add "${REQUIRED_PLACEHOLDER}" to your HTML template.`,
+    )
+  }
 }
