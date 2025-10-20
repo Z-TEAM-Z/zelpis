@@ -5,6 +5,7 @@ import path from 'node:path'
 import process from 'node:process'
 import { dedent } from 'ts-dedent'
 import { mergeDsl } from '../dsl/merge'
+import { resolveHtmlTemplate } from './resolve-html-template'
 
 const PLUGIN_NAME = 'zelpis-render-plugin'
 
@@ -60,8 +61,8 @@ export function renderPlugin(option: RenderPluginOption): Plugin {
     },
     configureServer(server) {
       // 开发时挂载中间件，处理 SSR 与 DSL 加载
-      const rootDir = server.config.root || process.cwd()
-      const htmlTemplate = fs.readFileSync(path.resolve(rootDir, 'index.html'), 'utf-8')
+      // const rootDir = server.config.root || process.cwd()
+      // const htmlTemplate = fs.readFileSync(path.resolve(rootDir, 'index.html'), 'utf-8')
 
       const zelpisConfig = server.config.zelpis! || {}
       if (!zelpisConfig) {
@@ -149,6 +150,13 @@ export function renderPlugin(option: RenderPluginOption): Plugin {
         const basePath = entry.basePath || '/'
         const entryFilePath = path.resolve(entry.entryPath)
 
+        // 计算相对于服务器根目录的路径
+        const rootDir = server.config.root || process.cwd()
+        // 计算出相对路径
+        const relativeEntryPath = `/${path.relative(rootDir, entryFilePath).replace(/\\/g, '/')}`
+        // 解析 HTML 模板
+        const htmlTemplate = resolveHtmlTemplate({ entry, defaultHtml: zelpisConfig.defaultHtml, rootDir })
+
         server.middlewares.use(async (req, res, next) => {
           try {
             if (!req.url || req.method !== 'GET')
@@ -195,7 +203,7 @@ export function renderPlugin(option: RenderPluginOption): Plugin {
               // .replace('<!-- app-html -->', rendered.html ?? '')
               .replace(
                 '<!-- app-inject-script -->',
-                getInjectScript(entryFilePath, props),
+                getInjectScript(relativeEntryPath, props),
               )
 
             res.statusCode = 200
