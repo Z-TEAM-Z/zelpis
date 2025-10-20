@@ -1,4 +1,4 @@
-export * from './builder-plugin'
+export * from './plugins/builder-plugin'
 
 export interface HtmlConfig {
   // 使用模板文件路径

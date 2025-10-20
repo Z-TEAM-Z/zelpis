@@ -9,12 +9,12 @@
       "import": "./dist/index.js"
     },
     "./plugins": {
-      "types": "./dist/plugins.d.ts",
-      "import": "./dist/plugins.js"
+      "types": "./dist/plugins/index.d.ts",
+      "import": "./dist/plugins/index.js"
     },
     "./dsl": {
-      "types": "./dist/dsl.d.ts",
-      "import": "./dist/dsl.js"
+      "types": "./dist/dsl/index.d.ts",
+      "import": "./dist/dsl/index.js"
     },
     "./dsl/server": {
       "types": "./dist/dsl/server.d.ts",
