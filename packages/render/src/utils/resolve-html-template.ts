@@ -18,15 +18,13 @@ export function resolveHtmlTemplate(options: ResolveHtmlOptions): string {
     const templatePath = path.resolve(rootDir, htmlConfig.template)
     if (fs.existsSync(templatePath)) {
       const content = fs.readFileSync(templatePath, 'utf-8')
-      validateHtmlTemplate(content, `template file: ${htmlConfig.template}`)
-      return content
+      return ensureHtmlPlaceholder(content)
     }
   }
 
   // 使用字符串模板自定义 HTML
   if (htmlConfig.custom) {
-    validateHtmlTemplate(htmlConfig.custom, 'custom HTML string')
-    return htmlConfig.custom
+    return ensureHtmlPlaceholder(htmlConfig.custom)
   }
 
   // 使用 JSON 配置生成 HTML
@@ -34,7 +32,13 @@ export function resolveHtmlTemplate(options: ResolveHtmlOptions): string {
     return generateHtmlFromConfig(htmlConfig)
   }
 
-  // 返回默认模板
+  // 默认回退到 index.html
+  const defaultPath = path.resolve(rootDir, 'index.html')
+  // 如果默认模板存在就输出默认文件，否则输出默认字符串
+  if (fs.existsSync(defaultPath)) {
+    const content = fs.readFileSync(defaultPath, 'utf-8')
+    return ensureHtmlPlaceholder(content)
+  }
   return getDefaultHtmlTemplate()
 }
 
@@ -75,13 +79,27 @@ function getDefaultHtmlTemplate(): string {
 					</html>`
 }
 
-function validateHtmlTemplate(html: string, source: string): void {
+/**
+ * 确保 HTML 模板包含必需的脚本注入占位符
+ * 如果缺失，会自动添加
+ */
+function ensureHtmlPlaceholder(html: string): string {
   const REQUIRED_PLACEHOLDER = '<!-- app-inject-script -->'
 
   if (!html.includes(REQUIRED_PLACEHOLDER)) {
-    console.warn(
-      `\x1B[33m[Zelpis Warning]\x1B[0m Missing required placeholder "${REQUIRED_PLACEHOLDER}" in ${source}.\n`
-      + `The application scripts will not be injected properly. Please add "${REQUIRED_PLACEHOLDER}" to your HTML template.`,
-    )
+    // 尝试在 </body> 前插入
+    if (html.includes('</body>')) {
+      return html.replace('</body>', `    ${REQUIRED_PLACEHOLDER}\n  </body>`)
+    }
+
+    // 如果没有 </body>，尝试在 </html> 前插入
+    if (html.includes('</html>')) {
+      return html.replace('</html>', `  ${REQUIRED_PLACEHOLDER}\n</html>`)
+    }
+
+    // 如果都没有，追加到末尾
+    return `${html}\n${REQUIRED_PLACEHOLDER}`
   }
+
+  return html
 }
