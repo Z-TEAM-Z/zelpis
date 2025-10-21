@@ -15,6 +15,9 @@
     "vite"
   ],
   "main": "index.js",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "build": "pnpm -r --filter './packages/*' run build",
     "dev": "pnpm -r --parallel --filter './packages/*' run dev",
