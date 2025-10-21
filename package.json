@@ -23,9 +23,6 @@
     "lint": "eslint --cache .",
     "prepublishOnly": "pnpm build"
   },
-  "dependencies": {
-    "tsdown": "catalog:dev"
-  },
   "devDependencies": {
     "@antfu/eslint-config": "catalog:dev",
     "@antfu/ni": "catalog:dev",
@@ -39,6 +36,7 @@
     "lint-staged": "catalog:dev",
     "simple-git-hooks": "catalog:dev",
     "taze": "catalog:dev",
+    "tsdown": "catalog:dev",
     "typescript": "catalog:dev",
     "vite": "catalog:dev",
     "vitest": "catalog:dev"
