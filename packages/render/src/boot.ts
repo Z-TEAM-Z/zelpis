@@ -119,7 +119,7 @@ function ssrRenderer(option: BootOption): { option: BootOption, render: (props: 
   }
 }
 
-export const boot: (option: BootOption) => any = once((option: BootOption): any => {
+export const boot = once((option: BootOption) => {
   if (!import.meta.env.SSR || option.type === 'csr') {
     return csrRenderer(option)
   }

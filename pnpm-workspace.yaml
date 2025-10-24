@@ -23,7 +23,7 @@ catalogs:
     simple-git-hooks: ^2.13.1
     taze: ^19.6.0
     ts-dedent: ^2.2.0
-    tsdown: ^0.2.17
+    tsdown: ^0.15.9
     typescript: ^5.9.2
     unplugin-vue-components: ^28.8.0
     vite: ^7.1.6

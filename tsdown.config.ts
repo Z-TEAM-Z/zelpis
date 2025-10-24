@@ -1,9 +1,9 @@
 // 共享的 tsdown 基础配置
-import type { OptionsWithoutConfig } from 'tsdown'
+import type { Options } from 'tsdown'
 import { defineConfig } from 'tsdown'
 
 export function createTsdownConfig(options: {
-  entry: OptionsWithoutConfig['entry']
+  entry: Options['entry']
   external?: (string | RegExp)[]
 }) {
   return defineConfig({
