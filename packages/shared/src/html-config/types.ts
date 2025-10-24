@@ -38,3 +38,13 @@ export interface Entry {
   dslEntrys?: any[]
   html?: HtmlConfig
 }
+
+/**
+ * 解析 HTML 选项
+ */
+export interface ResolveHtmlOptions {
+  entry: Entry
+  defaultHtml?: HtmlConfig
+  rootDir?: string
+  ensurePlaceholders?: string[]
+}

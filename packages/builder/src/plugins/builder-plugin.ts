@@ -3,12 +3,15 @@ import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
 import { loadDsl } from '@zelpis/render/dsl/server'
-import { resolveHtmlTemplate } from '@zelpis/shared/html-config'
+import { createPlaceholder, resolveHtmlTemplate } from '@zelpis/shared/html-config'
 import glob from 'fast-glob'
 import { resolvePackageJSON } from 'pkg-types'
 import { dedent } from 'ts-dedent'
 
 const PLUGIN_NAME = 'zelpis-builder-plugin'
+// 占位符
+const APP_BODY_START_PLACEHOLDER = createPlaceholder('app-body-start')
+const APP_INJECT_SCRIPT_PLACEHOLDER = createPlaceholder('app-inject-script')
 
 interface BuilderPluginOption {}
 
@@ -140,13 +143,14 @@ export async function buildPlugin(_option?: BuilderPluginOption): Promise<Plugin
             entry: item,
             defaultHtml: zelpisConfig.defaultHtml,
             rootDir: process.cwd(),
+            ensurePlaceholders: [APP_BODY_START_PLACEHOLDER, APP_INJECT_SCRIPT_PLACEHOLDER],
           })
 
           fs.writeFileSync(
             entry,
             htmlTemplate
-              .replace('<!-- app-html -->', '<div id="app"></div>')
-              .replace('<!-- app-inject-script -->', getInjectScript(item.entryPath, { props: { dsl: content } })),
+              .replace(APP_BODY_START_PLACEHOLDER, '<div id="app"></div>')
+              .replace(APP_INJECT_SCRIPT_PLACEHOLDER, getInjectScript(item.entryPath, { props: { dsl: content } })),
           )
 
           input[`${name ? `${name}/` : ''}${dslName}`] = entry

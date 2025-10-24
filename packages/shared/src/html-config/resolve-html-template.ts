@@ -1,17 +1,47 @@
-import type { Entry, HtmlConfig } from './types'
+import type { HtmlConfig, ResolveHtmlOptions } from './types'
 import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
-import { parse } from 'node-html-parser'
 
-interface ResolveHtmlOptions {
-  entry: Entry
-  defaultHtml?: HtmlConfig
-  rootDir?: string
-}
+// 正则表达式
+const HTML_TAG_REGEX = /<html/i
+const HTML_LANG_REGEX = /<html[^>]*\slang=/i
+const HEAD_OPEN_REGEX = /<head[^>]*>/i
+const HEAD_CLOSE_REGEX = /<\/head>/i
+const BODY_OPEN_REGEX = /<body[^>]*>/i
+const BODY_CLOSE_REGEX = /<\/body>/i
+const TITLE_REGEX = /<title>.*?<\/title>/i
+const META_CHARSET_REGEX = /<meta[^>]+charset=/i
+const META_VIEWPORT_REGEX = /<meta[^>]+name="viewport"/i
+const META_DESCRIPTION_REGEX = /<meta[^>]+name="description"/i
+const META_KEYWORDS_REGEX = /<meta[^>]+name="keywords"/i
+const HTML_CLOSE_REGEX = /<\/html>/i
 
-const REQUIRED_PLACEHOLDER = '<!-- app-inject-script -->'
+// 占位符插入的规则和位置
+const INSERT_RULES = [
+  {
+    keywords: ['head-start', 'head-begin'],
+    target: HEAD_OPEN_REGEX,
+    position: 'after',
+  },
+  {
+    keywords: ['body-start', 'body-begin'],
+    target: BODY_OPEN_REGEX,
+    position: 'after',
+  },
+  {
+    keywords: ['body-end', 'script'],
+    target: BODY_CLOSE_REGEX,
+    position: 'before',
+  },
+  {
+    keywords: ['head', 'meta', 'style', 'preload', 'link'],
+    target: HEAD_CLOSE_REGEX,
+    position: 'before',
+  },
+]
 
+// 默认模板
 const DEFAULT_HTML_TEMPLATE = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -21,9 +51,16 @@ const DEFAULT_HTML_TEMPLATE = `<!DOCTYPE html>
 </head>
 <body>
   <div id="app"></div>
-  ${REQUIRED_PLACEHOLDER}
 </body>
 </html>`
+
+/**
+ * 创建占位符
+ * @param name 占位符名称
+ */
+export function createPlaceholder(name: string): string {
+  return `<!-- zelpis:${name} -->`
+}
 
 /**
  * 解析 HTML 模板
@@ -35,12 +72,12 @@ const DEFAULT_HTML_TEMPLATE = `<!DOCTYPE html>
  * @platform node
  */
 export function resolveHtmlTemplate(options: ResolveHtmlOptions): string {
-  const { entry, defaultHtml, rootDir = process.cwd() } = options
+  const { entry, defaultHtml, rootDir = process.cwd(), ensurePlaceholders = [] } = options
   const htmlConfig = { ...defaultHtml, ...entry.html }
 
   // custom 完全覆盖
   if (htmlConfig.custom) {
-    return ensureHtmlPlaceholder(htmlConfig.custom)
+    return ensureHtmlPlaceholder(htmlConfig.custom, ensurePlaceholders)
   }
 
   // 获取基础模板
@@ -51,7 +88,7 @@ export function resolveHtmlTemplate(options: ResolveHtmlOptions): string {
     html = applyHtmlConfig(html, htmlConfig)
   }
 
-  return ensureHtmlPlaceholder(html)
+  return ensureHtmlPlaceholder(html, ensurePlaceholders)
 }
 
 /**
@@ -86,151 +123,236 @@ function getBaseTemplate(config: HtmlConfig, rootDir: string): string {
 
 /**
  * 在基础 HTML 模板上应用配置
- * 使用 node-html-parser 进行 DOM 操作
+ * 使用字符串替换和正则表达式
  */
 function applyHtmlConfig(html: string, config: HtmlConfig): string {
-  const root = parse(html, {
-    comment: true, // 保留注释（包括 placeholder）
-    blockTextElements: {
-      script: true,
-      style: true,
-    },
-  })
-
-  const headEl = root.querySelector('head')
-  const bodyEl = root.querySelector('body')
-  const htmlEl = root.querySelector('html')
+  let result = html
 
   // 应用 meta 配置
   if (config.meta) {
-    const { title, description, keywords, viewport, charset, lang } = config.meta
-
-    // 设置 html lang 属性
-    if (lang && htmlEl) {
-      htmlEl.setAttribute('lang', lang)
-    }
-
-    // 设置或更新 charset
-    if (charset && headEl) {
-      let charsetMeta = headEl.querySelector('meta[charset]')
-      if (charsetMeta) {
-        charsetMeta.setAttribute('charset', charset)
-      }
-      else {
-        charsetMeta = parse(`<meta charset="${charset}">`)
-        headEl.insertAdjacentHTML('afterbegin', charsetMeta.toString())
-      }
-    }
-
-    // 设置或更新 viewport
-    if (viewport && headEl) {
-      let viewportMeta = headEl.querySelector('meta[name="viewport"]')
-      if (viewportMeta) {
-        viewportMeta.setAttribute('content', viewport)
-      }
-      else {
-        viewportMeta = parse(`<meta name="viewport" content="${viewport}">`)
-        headEl.appendChild(viewportMeta)
-      }
-    }
-
-    // 设置或更新 title
-    if (title && headEl) {
-      let titleEl = headEl.querySelector('title')
-      if (titleEl) {
-        titleEl.textContent = title
-      }
-      else {
-        titleEl = parse(`<title>${title}</title>`)
-        headEl.appendChild(titleEl)
-      }
-    }
-
-    // 设置或更新 description
-    if (description && headEl) {
-      let descMeta = headEl.querySelector('meta[name="description"]')
-      if (descMeta) {
-        descMeta.setAttribute('content', description)
-      }
-      else {
-        descMeta = parse(`<meta name="description" content="${description}">`)
-        headEl.appendChild(descMeta)
-      }
-    }
-
-    // 设置或更新 keywords
-    if (keywords && headEl) {
-      let keywordsMeta = headEl.querySelector('meta[name="keywords"]')
-      if (keywordsMeta) {
-        keywordsMeta.setAttribute('content', keywords)
-      }
-      else {
-        keywordsMeta = parse(`<meta name="keywords" content="${keywords}">`)
-        headEl.appendChild(keywordsMeta)
-      }
-    }
+    result = applyMetaConfig(result, config.meta)
   }
 
   // 在 head 中追加额外内容
-  if (config.head && config.head.length > 0 && headEl) {
-    config.head.forEach((htmlString) => {
-      headEl.insertAdjacentHTML('beforeend', htmlString)
-    })
+  if (config.head && config.head.length > 0) {
+    result = applyHeadContent(result, config.head)
   }
 
   // 应用 body 配置
-  if (config.body && bodyEl) {
-    // 设置 body 属性
-    if (config.body.attributes) {
-      Object.entries(config.body.attributes).forEach(([key, value]) => {
-        bodyEl.setAttribute(key, value)
-      })
-    }
-
-    // 替换 body 内容（保留 placeholder）
-    if (config.body.content) {
-      const currentContent = bodyEl.innerHTML
-      const hasPlaceholder = currentContent.includes(REQUIRED_PLACEHOLDER)
-
-      if (hasPlaceholder) {
-        // 保留 placeholder，替换其他内容
-        bodyEl.innerHTML = `  ${config.body.content}\n  ${REQUIRED_PLACEHOLDER}\n`
-      }
-      else {
-        bodyEl.innerHTML = `  ${config.body.content}\n`
-      }
-    }
+  if (config.body) {
+    result = applyBodyConfig(result, config.body)
   }
 
-  return root.toString()
+  return result
 }
 
 /**
- * 确保 HTML 模板包含必需的脚本注入占位符
+ * 应用 meta 配置
+ */
+function applyMetaConfig(html: string, meta: NonNullable<HtmlConfig['meta']>): string {
+  let result = html
+  const { title, description, keywords, viewport, charset, lang } = meta
+
+  // 设置 html lang 属性
+  if (lang) {
+    if (HTML_LANG_REGEX.test(result)) {
+      result = result.replace(/(<html[^>]*\s)lang="[^"]*"/i, `$1lang="${escapeAttrValue(lang)}"`)
+    }
+    else if (HTML_TAG_REGEX.test(result)) {
+      result = result.replace(HTML_TAG_REGEX, `<html lang="${escapeAttrValue(lang)}"`)
+    }
+  }
+
+  // 设置或更新 charset
+  if (charset) {
+    if (META_CHARSET_REGEX.test(result)) {
+      result = result.replace(/(<meta[^>]+)charset="[^"]*"/i, `$1charset="${escapeAttrValue(charset)}"`)
+    }
+    else if (/<head>/i.test(result)) {
+      result = result.replace(/<head>/i, `<head>\n<meta charset="${escapeAttrValue(charset)}">`)
+    }
+  }
+
+  // 设置或更新 viewport
+  if (viewport) {
+    if (META_VIEWPORT_REGEX.test(result)) {
+      result = result.replace(
+        /(<meta[^>]+name="viewport"[^>]+)content="[^"]*"/i,
+        `$1content="${escapeAttrValue(viewport)}"`,
+      )
+    }
+    else if (HEAD_CLOSE_REGEX.test(result)) {
+      result = result.replace(HEAD_CLOSE_REGEX, `<meta name="viewport" content="${escapeAttrValue(viewport)}">\n</head>`)
+    }
+  }
+
+  // 设置或更新 title
+  if (title) {
+    if (/<title>/i.test(result)) {
+      result = result.replace(TITLE_REGEX, `<title>${title}</title>`)
+    }
+    else if (HEAD_CLOSE_REGEX.test(result)) {
+      result = result.replace(HEAD_CLOSE_REGEX, `<title>${title}</title>\n</head>`)
+    }
+  }
+
+  // 设置或更新 description
+  if (description) {
+    if (META_DESCRIPTION_REGEX.test(result)) {
+      result = result.replace(
+        /(<meta[^>]+name="description"[^>]+)content="[^"]*"/i,
+        `$1content="${escapeAttrValue(description)}"`,
+      )
+    }
+    else if (HEAD_CLOSE_REGEX.test(result)) {
+      result = result.replace(HEAD_CLOSE_REGEX, `<meta name="description" content="${escapeAttrValue(description)}">\n</head>`)
+    }
+  }
+
+  // 设置或更新 keywords
+  if (keywords) {
+    if (META_KEYWORDS_REGEX.test(result)) {
+      result = result.replace(
+        /(<meta[^>]+name="keywords"[^>]+)content="[^"]*"/i,
+        `$1content="${escapeAttrValue(keywords)}"`,
+      )
+    }
+    else if (HEAD_CLOSE_REGEX.test(result)) {
+      result = result.replace(HEAD_CLOSE_REGEX, `<meta name="keywords" content="${escapeAttrValue(keywords)}">\n</head>`)
+    }
+  }
+
+  return result
+}
+
+/**
+ * 在 head 中追加额外内容
+ */
+function applyHeadContent(html: string, headContent: string[]): string {
+  if (!headContent.length)
+    return html
+
+  const content = headContent.join('\n')
+  return html.replace(HEAD_CLOSE_REGEX, `${content}\n</head>`)
+}
+
+/**
+ * 应用 body 配置
+ */
+function applyBodyConfig(html: string, bodyConfig: NonNullable<HtmlConfig['body']>): string {
+  let result = html
+
+  // 设置 body 属性
+  if (bodyConfig.attributes) {
+    const newAttrs = Object.entries(bodyConfig.attributes)
+      .map(([key, value]) => `${key}="${escapeAttrValue(value)}"`)
+      .join(' ')
+
+    if (BODY_OPEN_REGEX.test(result)) {
+      result = result.replace(/<body([^>]*)>/i, (match, existingAttrs) => {
+        const trimmedAttrs = existingAttrs.trim()
+        if (trimmedAttrs) {
+          return `<body ${trimmedAttrs} ${newAttrs}>`
+        }
+        return `<body ${newAttrs}>`
+      })
+    }
+  }
+
+  // 替换 body 内容
+  if (bodyConfig.content) {
+    result = result.replace(
+      /<body([^>]*)>([\s\S]*?)<\/body>/i,
+      (match, attrs) => {
+        return `<body${attrs}>\n${bodyConfig.content}\n</body>`
+      },
+    )
+  }
+
+  return result
+}
+
+/**
+ * 确保 HTML 模板包含必需的注入占位符
  * 如果缺失，会自动添加
  */
-function ensureHtmlPlaceholder(html: string): string {
-  if (html.includes(REQUIRED_PLACEHOLDER)) {
-    return html
+function ensureHtmlPlaceholder(html: string, placeholders: string[]): string {
+  let result = html
+
+  for (const placeholder of placeholders) {
+    // 如果已存在，跳过
+    if (result.includes(placeholder)) {
+      continue
+    }
+
+    // 插入
+    result = insertPlaceholder(result, placeholder)
   }
 
-  // 使用 node-html-parser 精确插入
-  const root = parse(html, { comment: true })
-  const bodyEl = root.querySelector('body')
+  return result
+}
 
-  if (bodyEl) {
-    // 在 body 结束前插入
-    bodyEl.insertAdjacentHTML('beforeend', `  ${REQUIRED_PLACEHOLDER}\n`)
-    return root.toString()
+/**
+ * 根据占位符名称中的关键词判断应该插入的位置
+ */
+function insertPlaceholder(html: string, placeholder: string): string {
+  const lower = placeholder.toLowerCase()
+
+  // 遍历规则
+  for (const rule of INSERT_RULES) {
+    if (rule.keywords.some(keyword => lower.includes(keyword))) {
+      if (rule.target.test(html)) {
+        if (rule.position === 'after') {
+          return html.replace(rule.target, `$&\n  ${placeholder}`)
+        }
+        else {
+          return html.replace(rule.target, `  ${placeholder}\n$&`)
+        }
+      }
+    }
   }
 
-  // 如果没有 body，尝试在 html 结束前插入
-  const htmlEl = root.querySelector('html')
-  if (htmlEl) {
-    htmlEl.insertAdjacentHTML('beforeend', `  ${REQUIRED_PLACEHOLDER}\n`)
-    return root.toString()
+  // 根据占位符类型选择位置
+  const isHeadRelated = lower.includes('head') || lower.includes('meta')
+    || lower.includes('style') || lower.includes('link')
+  const isBodyRelated = lower.includes('body') || lower.includes('script')
+
+  // Head 相关的占位符
+  if (isHeadRelated) {
+    if (HEAD_CLOSE_REGEX.test(html)) {
+      return html.replace(HEAD_CLOSE_REGEX, `  ${placeholder}\n</head>`)
+    }
+    // 没有 head，尝试创建 head 区域或插入到 <html> 后
+    if (/<html[^>]*>/i.test(html)) {
+      return html.replace(/<html([^>]*)>/i, `<html$1>\n<head>\n  ${placeholder}\n</head>`)
+    }
   }
 
-  // 都没有，直接追加到末尾
-  return `${html}\n${REQUIRED_PLACEHOLDER}`
+  // Body 相关的占位符
+  if (isBodyRelated) {
+    if (BODY_CLOSE_REGEX.test(html)) {
+      return html.replace(BODY_CLOSE_REGEX, `  ${placeholder}\n</body>`)
+    }
+  }
+
+  // 兜底：</head> > </body> > </html>
+  if (HEAD_CLOSE_REGEX.test(html)) {
+    return html.replace(HEAD_CLOSE_REGEX, `  ${placeholder}\n</head>`)
+  }
+  if (BODY_CLOSE_REGEX.test(html)) {
+    return html.replace(BODY_CLOSE_REGEX, `  ${placeholder}\n</body>`)
+  }
+  if (HTML_CLOSE_REGEX.test(html)) {
+    return html.replace(HTML_CLOSE_REGEX, `  ${placeholder}\n</html>`)
+  }
+
+  // 最后的最后
+  return `${html}\n${placeholder}`
+}
+
+/**
+ * 转义 HTML 属性值中的双引号，防止属性值中的双引号破坏 HTML 结构
+ */
+function escapeAttrValue(text: string): string {
+  return text.replace(/"/g, '&quot;')
 }

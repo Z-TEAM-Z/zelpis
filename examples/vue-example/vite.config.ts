@@ -41,7 +41,7 @@ export default defineConfig({
                     <meta charset="UTF-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <title>Vue Example custom222</title>
-                  </head><div id="app"></div><!-- app-inject-script -->`,
+                  </head>`,
         },
       },
     ],

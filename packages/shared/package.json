@@ -20,9 +20,6 @@
     "build": "tsdown",
     "dev": "tsdown --watch"
   },
-  "dependencies": {
-    "node-html-parser": "catalog:dev"
-  },
   "devDependencies": {
     "tsdown": "catalog:dev"
   }

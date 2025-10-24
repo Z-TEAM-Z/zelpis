@@ -3,13 +3,17 @@ import type { Plugin } from 'vite'
 import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
-import { resolveHtmlTemplate } from '@zelpis/shared/html-config'
+import { createPlaceholder, resolveHtmlTemplate } from '@zelpis/shared/html-config'
 import { dedent } from 'ts-dedent'
 import { mergeDsl } from '../dsl/merge'
 
 const PLUGIN_NAME = 'zelpis-render-plugin'
 
 const VIRTUAL_MODULE_ID = 'virtual:zelpis/render-config'
+
+// 占位符
+const APP_BODY_START_PLACEHOLDER = createPlaceholder('app-body-start')
+const APP_INJECT_SCRIPT_PLACEHOLDER = createPlaceholder('app-inject-script')
 
 interface RenderPluginOption {
   baseDir?: string
@@ -151,8 +155,14 @@ export function renderPlugin(option: RenderPluginOption): Plugin {
 
         // 计算出相对路径
         const relativeEntryPath = `/${path.relative(rootDir, entryFilePath).replace(/\\/g, '/')}`
+
         // 解析 HTML 模板
-        const htmlTemplate = resolveHtmlTemplate({ entry, defaultHtml: zelpisConfig.defaultHtml, rootDir })
+        const htmlTemplate = resolveHtmlTemplate({
+          entry,
+          defaultHtml: zelpisConfig.defaultHtml,
+          rootDir,
+          ensurePlaceholders: [APP_BODY_START_PLACEHOLDER, APP_INJECT_SCRIPT_PLACEHOLDER],
+        })
 
         server.middlewares.use(async (req, res, next) => {
           try {
@@ -197,9 +207,9 @@ export function renderPlugin(option: RenderPluginOption): Plugin {
 
             const html = template
               // .replace('<!-- app-head -->', rendered.head ?? '')
-              // .replace('<!-- app-html -->', rendered.html ?? '')
+              .replace(APP_BODY_START_PLACEHOLDER, '<div id="app"></div>')
               .replace(
-                '<!-- app-inject-script -->',
+                APP_INJECT_SCRIPT_PLACEHOLDER,
                 getInjectScript(relativeEntryPath, props),
               )
 
