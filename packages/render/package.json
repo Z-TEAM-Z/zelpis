@@ -2,7 +2,6 @@
   "name": "@zelpis/render",
   "type": "module",
   "version": "0.0.1",
-
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
