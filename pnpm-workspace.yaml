@@ -18,6 +18,7 @@ catalogs:
     fast-glob: ^3.3.3
     jiti: ^2.6.1
     lint-staged: ^15.5.2
+    node-html-parser: ^6.1.13
     pkg-types: ^2.3.0
     simple-git-hooks: ^2.13.1
     taze: ^19.6.0

@@ -2,8 +2,8 @@ import type { Plugin } from 'vite'
 import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
-import { resolveHtmlTemplate } from '@zelpis/render'
 import { loadDsl } from '@zelpis/render/dsl/server'
+import { resolveHtmlTemplate } from '@zelpis/shared/html-config'
 import glob from 'fast-glob'
 import { resolvePackageJSON } from 'pkg-types'
 import { dedent } from 'ts-dedent'
@@ -138,8 +138,7 @@ export async function buildPlugin(_option?: BuilderPluginOption): Promise<Plugin
           // 解析 HTML 模板
           const htmlTemplate = resolveHtmlTemplate({
             entry: item,
-            defaultHtml:
-            zelpisConfig.defaultHtml,
+            defaultHtml: zelpisConfig.defaultHtml,
             rootDir: process.cwd(),
           })
 

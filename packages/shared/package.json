@@ -7,6 +7,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./html-config": {
+      "types": "./dist/html-config/index.d.ts",
+      "import": "./dist/html-config/index.js"
     }
   },
   "main": "./dist/index.js",
@@ -15,6 +19,9 @@
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch"
+  },
+  "dependencies": {
+    "node-html-parser": "catalog:dev"
   },
   "devDependencies": {
     "tsdown": "catalog:dev"

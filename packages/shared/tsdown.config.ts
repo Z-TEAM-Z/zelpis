@@ -1,5 +1,8 @@
 import { createTsdownConfig } from '../../tsdown.config'
 
 export default createTsdownConfig({
-  entry: ['./src/index.ts'],
+  entry: {
+    'index': './src/index.ts',
+    'html-config/index': './src/html-config/index.ts',
+  },
 })

@@ -3,9 +3,9 @@ import type { Plugin } from 'vite'
 import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
+import { resolveHtmlTemplate } from '@zelpis/shared/html-config'
 import { dedent } from 'ts-dedent'
 import { mergeDsl } from '../dsl/merge'
-import { resolveHtmlTemplate } from '../utils/resolve-html-template'
 
 const PLUGIN_NAME = 'zelpis-render-plugin'
 
