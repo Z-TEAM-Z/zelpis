@@ -1,4 +1,4 @@
-import type { ZElpisConfig } from '@zelpis/builder'
+import type { ZElpisConfig } from '@zelpis/shared/html-config'
 import type { Plugin } from 'vite'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -49,7 +49,10 @@ export function renderPlugin(option: RenderPluginOption): Plugin {
     name: PLUGIN_NAME,
     enforce: 'pre',
     config(config) {
-      const zelpisConfig = parseOption({ ...option, ...config.zelpis || {} as any })
+      if (!config.zelpis) {
+        throw new Error('Zelpis render config not found')
+      }
+      const zelpisConfig = parseOption({ ...option, ...config.zelpis })
       config.zelpis = zelpisConfig
       Object.assign(parsedConfig, zelpisConfig)
     },
@@ -67,10 +70,7 @@ export function renderPlugin(option: RenderPluginOption): Plugin {
       // 计算相对于服务器根目录的路径
       const rootDir = server.config.root || process.cwd()
 
-      const zelpisConfig = server.config.zelpis! || {}
-      if (!zelpisConfig) {
-        throw new Error('Zelpis render config not found')
-      }
+      const zelpisConfig = server.config.zelpis!
 
       function resolveModuleEntry(fileOrDirPath: string): string {
         if (fs.existsSync(fileOrDirPath) && fs.statSync(fileOrDirPath).isDirectory()) {

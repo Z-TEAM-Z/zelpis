@@ -48,3 +48,8 @@ export interface ResolveHtmlOptions {
   rootDir?: string
   ensurePlaceholders?: string[]
 }
+
+export interface ZElpisConfig {
+  entrys: Entry[]
+  defaultHtml?: HtmlConfig
+}
