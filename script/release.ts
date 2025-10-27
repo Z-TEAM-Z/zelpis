@@ -9,10 +9,10 @@ execSync('bumpp -r -a --no-commit --no-tag --no-push', { stdio: 'inherit' })
 const { version } = JSON.parse(readFileSync('package.json', { encoding: 'utf8' }))
 
 if (oldVersion === version) {
-  console.log('version error')
+  console.error('version error')
   process.exit()
 }
 
-execSync('git add .', { stdio: 'inherit' })
+execSync('git add .', { stdio: 'inherit' }) 
 execSync(`git commit -m "chore: release v${version}"`, { stdio: 'inherit' })
 execSync(`git tag -a v${version} -m "v${version}"`, { stdio: 'inherit' })
