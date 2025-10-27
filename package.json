@@ -23,6 +23,7 @@
     "dev": "pnpm -r --parallel --filter './packages/*' run dev",
     "test": "vitest",
     "typecheck": "tsc --noEmit",
+    "release": "tsx scripts/release.ts",
     "lint": "eslint --cache .",
     "prepublishOnly": "pnpm build"
   },
