@@ -16,6 +16,13 @@ const META_VIEWPORT_REGEX = /<meta[^>]+name="viewport"/i
 const META_DESCRIPTION_REGEX = /<meta[^>]+name="description"/i
 const META_KEYWORDS_REGEX = /<meta[^>]+name="keywords"/i
 const HTML_CLOSE_REGEX = /<\/html>/i
+const HTML_LANG_REPLACE_REGEX = /(<html[^>]*\s)lang="[^"]*"/i
+const BODY_REPLACE_REGEX = /<body([^>]*)>/i
+const BODY_FULL_REGEX = /<body([^>]*)>([\s\S]*?)<\/body>/i
+const META_CHARSET_REPLACE_REGEX = /(<meta[^>]+)charset="[^"]*"/i
+const META_VIEWPORT_REPLACE_REGEX = /(<meta[^>]+name="viewport"[^>]+)content="[^"]*"/i
+const META_DESCRIPTION_REPLACE_REGEX = /(<meta[^>]+name="description"[^>]+)content="[^"]*"/i
+const META_KEYWORDS_REPLACE_REGEX = /(<meta[^>]+name="keywords"[^>]+)content="[^"]*"/i
 
 // 占位符插入的规则和位置
 const INSERT_RULES = [
@@ -155,71 +162,57 @@ function applyMetaConfig(html: string, meta: NonNullable<HtmlConfig['meta']>): s
 
   // 设置 html lang 属性
   if (lang) {
-    if (HTML_LANG_REGEX.test(result)) {
-      result = result.replace(/(<html[^>]*\s)lang="[^"]*"/i, `$1lang="${escapeAttrValue(lang)}"`)
-    }
-    else if (HTML_TAG_REGEX.test(result)) {
-      result = result.replace(HTML_TAG_REGEX, `<html lang="${escapeAttrValue(lang)}"`)
-    }
+    const escapedLang = escapeAttrValue(lang)
+    result = updateOrInsert(
+      result,
+      HTML_LANG_REGEX,
+      HTML_LANG_REPLACE_REGEX,
+      `$1lang="${escapedLang}"`,
+      HTML_TAG_REGEX,
+      `<html lang="${escapedLang}"`,
+    )
   }
 
   // 设置或更新 charset
   if (charset) {
-    if (META_CHARSET_REGEX.test(result)) {
-      result = result.replace(/(<meta[^>]+)charset="[^"]*"/i, `$1charset="${escapeAttrValue(charset)}"`)
-    }
-    else if (/<head>/i.test(result)) {
-      result = result.replace(/<head>/i, `<head>\n<meta charset="${escapeAttrValue(charset)}">`)
+    if (charset) {
+      const escapedCharset = escapeAttrValue(charset)
+      result = updateOrInsert(
+        result,
+        META_CHARSET_REGEX,
+        META_CHARSET_REPLACE_REGEX,
+        `$1charset="${escapedCharset}"`,
+        HEAD_OPEN_REGEX,
+        `$&\n  <meta charset="${escapedCharset}">`,
+      )
     }
   }
 
   // 设置或更新 viewport
   if (viewport) {
-    if (META_VIEWPORT_REGEX.test(result)) {
-      result = result.replace(
-        /(<meta[^>]+name="viewport"[^>]+)content="[^"]*"/i,
-        `$1content="${escapeAttrValue(viewport)}"`,
-      )
-    }
-    else if (HEAD_CLOSE_REGEX.test(result)) {
-      result = result.replace(HEAD_CLOSE_REGEX, `<meta name="viewport" content="${escapeAttrValue(viewport)}">\n</head>`)
-    }
+    result = updateMetaTag(result, 'viewport', viewport, META_VIEWPORT_REGEX, META_VIEWPORT_REPLACE_REGEX)
   }
 
   // 设置或更新 title
   if (title) {
-    if (/<title>/i.test(result)) {
-      result = result.replace(TITLE_REGEX, `<title>${title}</title>`)
-    }
-    else if (HEAD_CLOSE_REGEX.test(result)) {
-      result = result.replace(HEAD_CLOSE_REGEX, `<title>${title}</title>\n</head>`)
-    }
+    result = updateOrInsert(
+      result,
+      TITLE_REGEX,
+      TITLE_REGEX,
+      `<title>${title}</title>`,
+      HEAD_CLOSE_REGEX,
+      `<title>${title}</title>\n</head>`,
+    )
   }
 
   // 设置或更新 description
   if (description) {
-    if (META_DESCRIPTION_REGEX.test(result)) {
-      result = result.replace(
-        /(<meta[^>]+name="description"[^>]+)content="[^"]*"/i,
-        `$1content="${escapeAttrValue(description)}"`,
-      )
-    }
-    else if (HEAD_CLOSE_REGEX.test(result)) {
-      result = result.replace(HEAD_CLOSE_REGEX, `<meta name="description" content="${escapeAttrValue(description)}">\n</head>`)
-    }
+    result = updateMetaTag(result, 'description', description, META_DESCRIPTION_REGEX, META_DESCRIPTION_REPLACE_REGEX)
   }
 
   // 设置或更新 keywords
   if (keywords) {
-    if (META_KEYWORDS_REGEX.test(result)) {
-      result = result.replace(
-        /(<meta[^>]+name="keywords"[^>]+)content="[^"]*"/i,
-        `$1content="${escapeAttrValue(keywords)}"`,
-      )
-    }
-    else if (HEAD_CLOSE_REGEX.test(result)) {
-      result = result.replace(HEAD_CLOSE_REGEX, `<meta name="keywords" content="${escapeAttrValue(keywords)}">\n</head>`)
-    }
+    result = updateMetaTag(result, 'keywords', keywords, META_KEYWORDS_REGEX, META_KEYWORDS_REPLACE_REGEX)
   }
 
   return result
@@ -249,7 +242,7 @@ function applyBodyConfig(html: string, bodyConfig: NonNullable<HtmlConfig['body'
       .join(' ')
 
     if (BODY_OPEN_REGEX.test(result)) {
-      result = result.replace(/<body([^>]*)>/i, (match, existingAttrs) => {
+      result = result.replace(BODY_REPLACE_REGEX, (match, existingAttrs) => {
         const trimmedAttrs = existingAttrs.trim()
         if (trimmedAttrs) {
           return `<body ${trimmedAttrs} ${newAttrs}>`
@@ -262,7 +255,7 @@ function applyBodyConfig(html: string, bodyConfig: NonNullable<HtmlConfig['body'
   // 替换 body 内容
   if (bodyConfig.content) {
     result = result.replace(
-      /<body([^>]*)>([\s\S]*?)<\/body>/i,
+      BODY_FULL_REGEX,
       (match, attrs) => {
         return `<body${attrs}>\n${bodyConfig.content}\n</body>`
       },
@@ -298,18 +291,16 @@ function ensureHtmlPlaceholder(html: string, placeholders: string[]): string {
 function insertPlaceholder(html: string, placeholder: string): string {
   const lower = placeholder.toLowerCase()
 
-  // 遍历规则
-  for (const rule of INSERT_RULES) {
-    if (rule.keywords.some(keyword => lower.includes(keyword))) {
-      if (rule.target.test(html)) {
-        if (rule.position === 'after') {
-          return html.replace(rule.target, `$&\n  ${placeholder}`)
-        }
-        else {
-          return html.replace(rule.target, `  ${placeholder}\n$&`)
-        }
-      }
-    }
+  // 找到对应的规则
+  const rule = INSERT_RULES.find(rule =>
+    rule.keywords.some(keyword => lower.includes(keyword)) && rule.target.test(html),
+  )
+
+  if (rule) {
+    const replacement = rule.position === 'after'
+      ? `$&\n  ${placeholder}`
+      : `  ${placeholder}\n$&`
+    return html.replace(rule.target, replacement)
   }
 
   // 根据占位符类型选择位置
@@ -346,7 +337,7 @@ function insertPlaceholder(html: string, placeholder: string): string {
     return html.replace(HTML_CLOSE_REGEX, `  ${placeholder}\n</html>`)
   }
 
-  // 最后的最后
+  // 最后的兜底：插入到文档末尾
   return `${html}\n${placeholder}`
 }
 
@@ -355,4 +346,51 @@ function insertPlaceholder(html: string, placeholder: string): string {
  */
 function escapeAttrValue(text: string): string {
   return text.replace(/"/g, '&quot;')
+}
+
+/**
+ * 通用的更新或插入函数
+ * @param html 原始 HTML
+ * @param checkRegex 检测是否存在的正则
+ * @param updateRegex 更新时使用的正则
+ * @param updateReplacement 更新时的替换内容
+ * @param fallbackRegex 如果不存在，在此位置插入
+ * @param fallbackReplacement 插入时的替换内容
+ */
+function updateOrInsert(
+  html: string,
+  checkRegex: RegExp,
+  updateRegex: RegExp,
+  updateReplacement: string,
+  fallbackRegex: RegExp,
+  fallbackReplacement: string,
+): string {
+  if (checkRegex.test(html)) {
+    return html.replace(updateRegex, updateReplacement)
+  }
+  if (fallbackRegex.test(html)) {
+    return html.replace(fallbackRegex, fallbackReplacement)
+  }
+  return html
+}
+
+/**
+ * 辅助函数：更新 meta 标签的 content
+ */
+function updateMetaTag(
+  html: string,
+  name: string,
+  value: string,
+  checkRegex: RegExp,
+  updateRegex: RegExp,
+): string {
+  const escapedValue = escapeAttrValue(value)
+  return updateOrInsert(
+    html,
+    checkRegex,
+    updateRegex,
+    `$1content="${escapedValue}"`,
+    HEAD_CLOSE_REGEX,
+    `<meta name="${name}" content="${escapedValue}">\n</head>`,
+  )
 }
