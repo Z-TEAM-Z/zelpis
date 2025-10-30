@@ -40,7 +40,7 @@ export default defineConfig({
           custom: `<head>
                     <meta charset="UTF-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>Vue Example custom222</title>
+                    <title>Vue Example custom</title>
                   </head>`,
         },
       },

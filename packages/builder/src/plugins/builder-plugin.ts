@@ -3,15 +3,15 @@ import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
 import { loadDsl } from '@zelpis/render/dsl/server'
-import { createPlaceholder, resolveHtmlTemplate } from '@zelpis/shared/html-config'
+import { resolveHtmlTemplate, STANDARD_PLACEHOLDERS } from '@zelpis/shared/html-config'
 import glob from 'fast-glob'
 import { resolvePackageJSON } from 'pkg-types'
 import { dedent } from 'ts-dedent'
 
 const PLUGIN_NAME = 'zelpis-builder-plugin'
 // 占位符
-const APP_BODY_START_PLACEHOLDER = createPlaceholder('app-body-start')
-const APP_INJECT_SCRIPT_PLACEHOLDER = createPlaceholder('app-inject-script')
+const APP_BODY_START_PLACEHOLDER = STANDARD_PLACEHOLDERS.APP_BODY_START
+const APP_INJECT_SCRIPT_PLACEHOLDER = STANDARD_PLACEHOLDERS.APP_INJECT_SCRIPT
 
 interface BuilderPluginOption {}
 

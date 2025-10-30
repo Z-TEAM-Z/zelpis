@@ -1,4 +1,4 @@
-import type { HtmlConfig, ResolveHtmlOptions } from './types'
+import type { HtmlConfig, PlaceholderRule, ResolveHtmlOptions } from './types'
 import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
@@ -24,30 +24,6 @@ const META_VIEWPORT_REPLACE_REGEX = /(<meta[^>]+name="viewport"[^>]+)content="[^
 const META_DESCRIPTION_REPLACE_REGEX = /(<meta[^>]+name="description"[^>]+)content="[^"]*"/i
 const META_KEYWORDS_REPLACE_REGEX = /(<meta[^>]+name="keywords"[^>]+)content="[^"]*"/i
 
-// 占位符插入的规则和位置
-const INSERT_RULES = [
-  {
-    keywords: ['head-start', 'head-begin'],
-    target: HEAD_OPEN_REGEX,
-    position: 'after',
-  },
-  {
-    keywords: ['body-start', 'body-begin'],
-    target: BODY_OPEN_REGEX,
-    position: 'after',
-  },
-  {
-    keywords: ['body-end', 'script'],
-    target: BODY_CLOSE_REGEX,
-    position: 'before',
-  },
-  {
-    keywords: ['head', 'meta', 'style', 'preload', 'link'],
-    target: HEAD_CLOSE_REGEX,
-    position: 'before',
-  },
-]
-
 // 默认模板
 const DEFAULT_HTML_TEMPLATE = `<!DOCTYPE html>
 <html lang="en">
@@ -65,9 +41,29 @@ const DEFAULT_HTML_TEMPLATE = `<!DOCTYPE html>
  * 创建占位符
  * @param name 占位符名称
  */
-export function createPlaceholder(name: string): string {
+function createPlaceholder(name: string): string {
   return `<!-- zelpis:${name} -->`
 }
+
+// 标注占位符，用于预定义占位符
+export const STANDARD_PLACEHOLDERS = {
+  APP_BODY_START: createPlaceholder('app-body-start'),
+  APP_INJECT_SCRIPT: createPlaceholder('app-inject-script'),
+} as const
+
+// 占位符规则 Map
+const PREDEFINED_RULES = new Map<string, PlaceholderRule>([
+  [STANDARD_PLACEHOLDERS.APP_BODY_START, {
+    target: BODY_OPEN_REGEX,
+    position: 'after',
+    func: insertPlaceholder,
+  }],
+  [STANDARD_PLACEHOLDERS.APP_INJECT_SCRIPT, {
+    target: BODY_CLOSE_REGEX,
+    position: 'before',
+    func: insertPlaceholder,
+  }],
+])
 
 /**
  * 解析 HTML 模板
@@ -273,13 +269,10 @@ function ensureHtmlPlaceholder(html: string, placeholders: string[]): string {
   let result = html
 
   for (const placeholder of placeholders) {
-    // 如果已存在，跳过
-    if (result.includes(placeholder)) {
-      continue
+    const rule = PREDEFINED_RULES.get(placeholder)
+    if (rule) {
+      result = rule.func(result, placeholder, rule)
     }
-
-    // 插入
-    result = insertPlaceholder(result, placeholder)
   }
 
   return result
@@ -288,42 +281,18 @@ function ensureHtmlPlaceholder(html: string, placeholders: string[]): string {
 /**
  * 根据占位符名称中的关键词判断应该插入的位置
  */
-function insertPlaceholder(html: string, placeholder: string): string {
-  const lower = placeholder.toLowerCase()
+function insertPlaceholder(html: string, placeholder: string, rule: PlaceholderRule): string {
+  // 如果已存在，跳过
+  if (html.includes(placeholder)) {
+    return html
+  }
 
-  // 找到对应的规则
-  const rule = INSERT_RULES.find(rule =>
-    rule.keywords.some(keyword => lower.includes(keyword)) && rule.target.test(html),
-  )
-
-  if (rule) {
+  // 如果匹配到规则，插入占位符
+  if (rule.target.test(html)) {
     const replacement = rule.position === 'after'
       ? `$&\n  ${placeholder}`
       : `  ${placeholder}\n$&`
     return html.replace(rule.target, replacement)
-  }
-
-  // 根据占位符类型选择位置
-  const isHeadRelated = lower.includes('head') || lower.includes('meta')
-    || lower.includes('style') || lower.includes('link')
-  const isBodyRelated = lower.includes('body') || lower.includes('script')
-
-  // Head 相关的占位符
-  if (isHeadRelated) {
-    if (HEAD_CLOSE_REGEX.test(html)) {
-      return html.replace(HEAD_CLOSE_REGEX, `  ${placeholder}\n</head>`)
-    }
-    // 没有 head，尝试创建 head 区域或插入到 <html> 后
-    if (/<html[^>]*>/i.test(html)) {
-      return html.replace(/<html([^>]*)>/i, `<html$1>\n<head>\n  ${placeholder}\n</head>`)
-    }
-  }
-
-  // Body 相关的占位符
-  if (isBodyRelated) {
-    if (BODY_CLOSE_REGEX.test(html)) {
-      return html.replace(BODY_CLOSE_REGEX, `  ${placeholder}\n</body>`)
-    }
   }
 
   // 兜底：</head> > </body> > </html>

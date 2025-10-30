@@ -3,7 +3,7 @@ import type { Plugin } from 'vite'
 import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
-import { createPlaceholder, resolveHtmlTemplate } from '@zelpis/shared/html-config'
+import { resolveHtmlTemplate, STANDARD_PLACEHOLDERS } from '@zelpis/shared/html-config'
 import { dedent } from 'ts-dedent'
 import { mergeDsl } from '../dsl/merge'
 
@@ -12,8 +12,8 @@ const PLUGIN_NAME = 'zelpis-render-plugin'
 const VIRTUAL_MODULE_ID = 'virtual:zelpis/render-config'
 
 // 占位符
-const APP_BODY_START_PLACEHOLDER = createPlaceholder('app-body-start')
-const APP_INJECT_SCRIPT_PLACEHOLDER = createPlaceholder('app-inject-script')
+const APP_BODY_START_PLACEHOLDER = STANDARD_PLACEHOLDERS.APP_BODY_START
+const APP_INJECT_SCRIPT_PLACEHOLDER = STANDARD_PLACEHOLDERS.APP_INJECT_SCRIPT
 
 interface RenderPluginOption {
   baseDir?: string

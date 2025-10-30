@@ -53,3 +53,9 @@ export interface ZElpisConfig {
   entrys: Entry[]
   defaultHtml?: HtmlConfig
 }
+
+export interface PlaceholderRule {
+  target: RegExp
+  position: 'before' | 'after'
+  func: (html: string, placeholder: string, rule: PlaceholderRule) => string
+}
