@@ -1,7 +1,7 @@
 {
   "name": "@zelpis/core",
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "repository": {
     "type": "git",
     "url": "https://github.com/Z-TEAM-Z/zelpis",
