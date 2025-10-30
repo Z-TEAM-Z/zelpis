@@ -3,11 +3,15 @@ import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
 import { loadDsl } from '@zelpis/render/dsl/server'
+import { resolveHtmlTemplate, STANDARD_PLACEHOLDERS } from '@zelpis/shared/html-config'
 import glob from 'fast-glob'
 import { resolvePackageJSON } from 'pkg-types'
 import { dedent } from 'ts-dedent'
 
 const PLUGIN_NAME = 'zelpis-builder-plugin'
+// 占位符
+const APP_BODY_START_PLACEHOLDER = STANDARD_PLACEHOLDERS.APP_BODY_START
+const APP_INJECT_SCRIPT_PLACEHOLDER = STANDARD_PLACEHOLDERS.APP_INJECT_SCRIPT
 
 interface BuilderPluginOption {}
 
@@ -47,30 +51,40 @@ async function getDslEntrys(dslPath: string): Promise<DslEntry[]> {
 
 export async function buildPlugin(_option?: BuilderPluginOption): Promise<Plugin> {
   const htmlTempDir = path.dirname(await resolvePackageJSON())
-  const htmlEntrys: string[] = []
+
+  // 用于备份和恢复
+  const fileBackups = new Map<string, string | null>() // 路径 -> 原始内容（null表示原本不存在）
+  const createdDirs = new Set<string>() // 记录新创建的目录
 
   return {
     name: PLUGIN_NAME,
     apply: 'build',
     buildEnd() {
-      htmlEntrys.forEach((item) => {
-        const relativePath = path.relative(htmlTempDir, item)
-        const firstSegment = relativePath.split(path.sep)[0]
-        const htmlRootDir = path.basename(firstSegment || '', '.html')
-        const dslEntryDir = path.resolve(htmlTempDir, htmlRootDir)
-
-        if (fs.existsSync(dslEntryDir) && dslEntryDir !== htmlTempDir) {
-          fs.rmSync(dslEntryDir, { force: true, recursive: true })
+      // 恢复/删除文件
+      fileBackups.forEach((originalContent, filePath) => {
+        if (originalContent === null) {
+          // 原本不存在的文件，直接删除
+          if (fs.existsSync(filePath)) {
+            fs.rmSync(filePath, { force: true })
+          }
         }
+        else {
+          // 原本存在的文件，恢复其内容
+          fs.writeFileSync(filePath, originalContent, 'utf-8')
+        }
+      })
 
-        fs.rmSync(item, { force: true })
+      // 清理新创建的空目录（从最深层开始）
+      const sortedDirs = Array.from(createdDirs).sort((a, b) => b.length - a.length)
+      sortedDirs.forEach((dir) => {
+        if (fs.existsSync(dir) && fs.readdirSync(dir).length === 0) {
+          fs.rmSync(dir, { force: true, recursive: true })
+        }
       })
     },
     async config(config) {
       config.build ||= {}
       config.build.rollupOptions ||= {}
-
-      const htmlTemplate = fs.readFileSync(path.resolve(process.cwd(), 'index.html'), 'utf-8')
 
       if (!fs.existsSync(htmlTempDir)) {
         fs.mkdirSync(htmlTempDir, { recursive: true })
@@ -103,20 +117,41 @@ export async function buildPlugin(_option?: BuilderPluginOption): Promise<Plugin
           const entry = path.resolve(htmlTempDir, ..._segments, `${filename}.html`)
           const entryDir = path.dirname(entry)
 
+          // 如果文件已存在，备份其内容
+          if (fs.existsSync(entry)) {
+            fileBackups.set(entry, fs.readFileSync(entry, 'utf-8'))
+          }
+          else {
+            // 文件不存在，标记为 null
+            fileBackups.set(entry, null)
+          }
+
+          // 如果目录不存在，创建并记录
           if (!fs.existsSync(entryDir)) {
             fs.mkdirSync(entryDir, { recursive: true })
+            // 记录所有新创建的父级目录
+            let currentDir = entryDir
+            while (currentDir !== htmlTempDir && !fs.existsSync(currentDir)) {
+              createdDirs.add(currentDir)
+              currentDir = path.dirname(currentDir)
+            }
+            createdDirs.add(entryDir)
           }
+
+          // 解析 HTML 模板
+          const htmlTemplate = resolveHtmlTemplate({
+            entry: item,
+            defaultHtml: zelpisConfig.defaultHtml,
+            rootDir: process.cwd(),
+            ensurePlaceholders: [APP_BODY_START_PLACEHOLDER, APP_INJECT_SCRIPT_PLACEHOLDER],
+          })
 
           fs.writeFileSync(
             entry,
             htmlTemplate
-              .replace('<!-- app-html -->', '<div id="app"></div>')
-              .replace('<!-- app-inject-script -->', getInjectScript(item.entryPath, { props: { dsl: content } })),
+              .replace(APP_BODY_START_PLACEHOLDER, '<div id="app"></div>')
+              .replace(APP_INJECT_SCRIPT_PLACEHOLDER, getInjectScript(item.entryPath, { props: { dsl: content } })),
           )
-
-          if (dslName !== '.') {
-            htmlEntrys.push(entry)
-          }
 
           input[`${name ? `${name}/` : ''}${dslName}`] = entry
         })

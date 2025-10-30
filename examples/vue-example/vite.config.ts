@@ -16,11 +16,33 @@ export default defineConfig({
     }),
   ],
   zelpis: {
+    // 全局默认 HTML 配置
+    defaultHtml: {
+      meta: {
+        title: 'defaultHtml',
+        description: 'A Vue.js example with Zelpis',
+        viewport: 'width=device-width, initial-scale=1.0',
+        charset: 'UTF-8',
+        lang: 'zh-CN',
+      },
+      head: [
+        '<link rel="icon" href="/favicon.ico">',
+        '<link rel="preconnect" href="https://fonts.googleapis.com">',
+      ],
+    },
     entrys: [
       {
         basePath: '/',
         entryPath: path.resolve(__dirname, './entry.ts'),
         dslPath: './model',
+        html: {
+          template: './custom.html',
+          custom: `<head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Vue Example custom</title>
+                  </head>`,
+        },
       },
     ],
   },

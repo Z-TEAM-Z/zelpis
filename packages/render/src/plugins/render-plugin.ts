@@ -1,14 +1,19 @@
-import type { ZElpisConfig } from '@zelpis/builder'
+import type { ZElpisConfig } from '@zelpis/shared/html-config'
 import type { Plugin } from 'vite'
 import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
+import { resolveHtmlTemplate, STANDARD_PLACEHOLDERS } from '@zelpis/shared/html-config'
 import { dedent } from 'ts-dedent'
 import { mergeDsl } from '../dsl/merge'
 
 const PLUGIN_NAME = 'zelpis-render-plugin'
 
 const VIRTUAL_MODULE_ID = 'virtual:zelpis/render-config'
+
+// 占位符
+const APP_BODY_START_PLACEHOLDER = STANDARD_PLACEHOLDERS.APP_BODY_START
+const APP_INJECT_SCRIPT_PLACEHOLDER = STANDARD_PLACEHOLDERS.APP_INJECT_SCRIPT
 
 interface RenderPluginOption {
   baseDir?: string
@@ -44,7 +49,10 @@ export function renderPlugin(option: RenderPluginOption): Plugin {
     name: PLUGIN_NAME,
     enforce: 'pre',
     config(config) {
-      const zelpisConfig = parseOption({ ...option, ...config.zelpis || {} as any })
+      if (!config.zelpis) {
+        throw new Error('Zelpis render config not found')
+      }
+      const zelpisConfig = parseOption({ ...option, ...config.zelpis })
       config.zelpis = zelpisConfig
       Object.assign(parsedConfig, zelpisConfig)
     },
@@ -59,14 +67,10 @@ export function renderPlugin(option: RenderPluginOption): Plugin {
       }
     },
     configureServer(server) {
-      // 开发时挂载中间件，处理 SSR 与 DSL 加载
+      // 计算相对于服务器根目录的路径
       const rootDir = server.config.root || process.cwd()
-      const htmlTemplate = fs.readFileSync(path.resolve(rootDir, 'index.html'), 'utf-8')
 
-      const zelpisConfig = server.config.zelpis! || {}
-      if (!zelpisConfig) {
-        throw new Error('Zelpis render config not found')
-      }
+      const zelpisConfig = server.config.zelpis!
 
       function resolveModuleEntry(fileOrDirPath: string): string {
         if (fs.existsSync(fileOrDirPath) && fs.statSync(fileOrDirPath).isDirectory()) {
@@ -149,6 +153,17 @@ export function renderPlugin(option: RenderPluginOption): Plugin {
         const basePath = entry.basePath || '/'
         const entryFilePath = path.resolve(entry.entryPath)
 
+        // 计算出相对路径
+        const relativeEntryPath = `/${path.relative(rootDir, entryFilePath).replace(/\\/g, '/')}`
+
+        // 解析 HTML 模板
+        const htmlTemplate = resolveHtmlTemplate({
+          entry,
+          defaultHtml: zelpisConfig.defaultHtml,
+          rootDir,
+          ensurePlaceholders: [APP_BODY_START_PLACEHOLDER, APP_INJECT_SCRIPT_PLACEHOLDER],
+        })
+
         server.middlewares.use(async (req, res, next) => {
           try {
             if (!req.url || req.method !== 'GET')
@@ -192,10 +207,10 @@ export function renderPlugin(option: RenderPluginOption): Plugin {
 
             const html = template
               // .replace('<!-- app-head -->', rendered.head ?? '')
-              // .replace('<!-- app-html -->', rendered.html ?? '')
+              .replace(APP_BODY_START_PLACEHOLDER, '<div id="app"></div>')
               .replace(
-                '<!-- app-inject-script -->',
-                getInjectScript(entryFilePath, props),
+                APP_INJECT_SCRIPT_PLACEHOLDER,
+                getInjectScript(relativeEntryPath, props),
               )
 
             res.statusCode = 200
