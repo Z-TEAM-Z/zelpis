@@ -2,6 +2,11 @@
   "name": "@zelpis/builder",
   "type": "module",
   "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Z-TEAM-Z/zelpis",
+    "directory": "packages/builder"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
