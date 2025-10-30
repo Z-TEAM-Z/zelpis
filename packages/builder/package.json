@@ -2,15 +2,19 @@
   "name": "@zelpis/builder",
   "type": "module",
   "version": "0.0.1",
-  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Z-TEAM-Z/zelpis",
+    "directory": "packages/builder"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./builder-plugin": {
-      "types": "./dist/builder-plugin.d.ts",
-      "import": "./dist/builder-plugin.js"
+    "./plugins": {
+      "types": "./dist/plugins/index.d.ts",
+      "import": "./dist/plugins/index.js"
     }
   },
   "main": "./dist/index.js",

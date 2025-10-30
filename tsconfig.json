@@ -31,10 +31,6 @@
   },
   "include": [
     "packages/**/*.ts",
-    "packages/**/*.tsx",
-    "examples/**/*.ts",
-    "examples/**/*.tsx",
-    "examples/**/*.vue",
     "tsdown.config.ts"
   ],
   "exclude": [

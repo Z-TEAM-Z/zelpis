@@ -2,7 +2,11 @@
   "name": "@zelpis/render",
   "type": "module",
   "version": "0.0.1",
-  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Z-TEAM-Z/zelpis",
+    "directory": "packages/render"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
