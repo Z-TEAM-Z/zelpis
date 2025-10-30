@@ -183,7 +183,7 @@ function applyMetaConfig(html: string, meta: NonNullable<HtmlConfig['meta']>): s
         META_CHARSET_REPLACE_REGEX,
         `$1charset="${escapedCharset}"`,
         HEAD_OPEN_REGEX,
-        `$&\n  <meta charset="${escapedCharset}">`,
+        `$&\n  <meta charset="${escapedCharset}" />`,
       )
     }
   }
@@ -391,6 +391,6 @@ function updateMetaTag(
     updateRegex,
     `$1content="${escapedValue}"`,
     HEAD_CLOSE_REGEX,
-    `<meta name="${name}" content="${escapedValue}">\n</head>`,
+    `<meta name="${name}" content="${escapedValue}" />\n</head>`,
   )
 }
