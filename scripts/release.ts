@@ -15,4 +15,5 @@ if (oldVersion === version) {
 
 execSync('git add .', { stdio: 'inherit' })
 execSync(`git commit -m "chore: release v${version}"`, { stdio: 'inherit' })
-execSync(`git tag -a v${version} -m "v${version}"`, { stdio: 'inherit' })
+// 移动到了publish.yml中
+// execSync(`git tag -a v${version} -m "v${version}"`, { stdio: 'inherit' })
