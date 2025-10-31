@@ -18,7 +18,8 @@ export async function hydrate(
     return root.render(Component)
   }
 
-  const { hydrateRoot } = await import('react-dom/client')
+  const module = await import('react-dom/client')
+  const hydrateRoot = module.hydrateRoot || module.default?.hydrateRoot
 
   const root = hydrateRoot(document.querySelector('#app')!, Component)
 
