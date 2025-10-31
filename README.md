@@ -1,3 +1,5 @@
+[![pkg.pr.new](/badge/Z-TEAM-Z/zelpis)](/~/Z-TEAM-Z/zelpis)
+
 # ZElpis
 
 ## 许可证
