@@ -7,9 +7,10 @@ export async function hydrate(
   _props: Record<string, any>,
   mount?: (app: Root) => void,
 ): Promise<void> {
+  // 开发环境 vite 并不会处理 commonjs 模块, 所以做一个兜底逻辑
+  const module = await import('react-dom/client')
+
   if (type === 'csr') {
-    // 开发环境 vite 并不会处理 commonjs 模块, 所以做一个兜底逻辑
-    const module = await import('react-dom/client')
     const createRoot = module.createRoot || module.default?.createRoot
 
     const root = createRoot(document.querySelector('#app')!)
@@ -18,7 +19,6 @@ export async function hydrate(
     return root.render(Component)
   }
 
-  const module = await import('react-dom/client')
   const hydrateRoot = module.hydrateRoot || module.default?.hydrateRoot
 
   const root = hydrateRoot(document.querySelector('#app')!, Component)
