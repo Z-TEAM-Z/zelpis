@@ -1,0 +1,42 @@
+{
+  "template_id": "project_dashboard_v1",
+  "version": "1.0.0",
+
+  "global_config": {
+    "title": "项目管理中心",
+    "theme_color": "#1890ff",
+    "logo_url": "/assets/logo.svg"
+  },
+  "components": [],
+  "pages": [
+    {
+      "id": "overview",
+      "label": "项目概览",
+      "url": "/overview",
+      "component_type": "SchemaPage",
+      "config": {},
+      "components": [{
+        "componentType": "Header",
+        "id": "overviewHeader",
+        "config": {
+          "titleText": "[[globalConfig.title]] - 概览",
+          "showSearch": true,
+          "backgroundColor": "#FFFFFF"
+        }
+      }, {
+        "componentType": "Text",
+        "id": "introText",
+        "config": {
+          "content": "欢迎使用项目概览面板。"
+        }
+      }]
+    },
+    {
+      "id": "iframe_report",
+      "label": "外部报告",
+      "url": "/report",
+      "component_type": "IframePage",
+      "iframe_url": "https://www.baidu.com"
+    }
+  ]
+}

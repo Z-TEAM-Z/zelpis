@@ -34,7 +34,7 @@ export default defineConfig({
       {
         basePath: '/',
         entryPath: path.resolve(__dirname, './entry.ts'),
-        dslPath: './model',
+        // dslPath: './model',
         html: {
           template: './custom.html',
           custom: `<head>

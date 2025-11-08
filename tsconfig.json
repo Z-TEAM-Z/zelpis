@@ -31,6 +31,9 @@
   },
   "include": [
     "packages/**/*.ts",
+    "packages/**/*.vue",
+    "examples/**/*.vue",
+    "env.d.ts",
     "tsdown.config.ts"
   ],
   "exclude": [

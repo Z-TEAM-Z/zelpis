@@ -1,0 +1,85 @@
+{
+  "template_id": "project_dashboard_v1",
+  "version": "1.0.0",
+
+  "global_config": {
+    "title": "项目管理中心",
+    "theme_color": "#1890ff",
+    "logo_url": "/assets/logo.svg"
+  },
+
+  "pages": [
+    {
+      "id": "overview",
+      "label": "项目概览",
+      "url": "/overview",
+      "component_type": "SchemaPage",
+      "page_schema": {
+        "layout": "grid",
+        "columns": 3,
+        "sections": [
+          {
+            "component": "StatCard",
+            "id": "stat_1",
+            "span": 1,
+            "config": {
+              "icon": "team",
+              "title": "团队成员",
+              "value": 15,
+              "footer_text": "本月新增 2 人"
+            }
+          },
+          {
+            "component": "StatCard",
+            "id": "stat_2",
+            "span": 1,
+            "config": {
+              "icon": "time",
+              "title": "待办任务",
+              "value": 42,
+              "footer_text": "已延期 5 项"
+            }
+          },
+          {
+            "component": "StatCard",
+            "id": "stat_3",
+            "span": 1,
+            "config": {
+              "icon": "dollar",
+              "title": "项目预算",
+              "value": "¥85K",
+              "footer_text": "已使用 60%"
+            }
+          },
+          {
+            "component": "LineChart",
+            "id": "chart_1",
+            "span": 3,
+            "config": {
+              "title": "近六月任务完成趋势",
+              "data_source_api": "/api/tasks/completion_trend",
+              "line_color": "[[global_config.theme_color]]"
+            }
+          },
+          {
+            "component": "TaskTable",
+            "id": "table_1",
+            "span": 3,
+            "config": {
+              "title": "待处理任务列表",
+              "data_source_api": "/api/tasks/pending",
+              "columns": ["ID", "任务名称", "负责人", "截止日期"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "iframe_report",
+      "label": "外部报告",
+      "url": "/report",
+      "component_type": "IframePage",
+      "iframe_url": "https://external.report.com/project-summary"
+    }
+  ]
+}

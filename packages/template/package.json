@@ -1,0 +1,57 @@
+{
+  "name": "@zelpis/template",
+  "type": "module",
+  "version": "0.0.2",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Z-TEAM-Z/zelpis",
+    "directory": "packages/template"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./vue/components": {
+      "types": "./dist/vue/components/index.d.ts",
+      "import": "./dist/vue/components/index.js"
+    },
+    "./vue/pages": {
+      "types": "./dist/vue/pages/index.d.ts",
+      "import": "./dist/vue/pages/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18",
+    "vite": "catalog:dev",
+    "vue": ">=3"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    },
+    "vue": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@zelpis/core": "workspace:*",
+    "element-plus": "catalog:frontend"
+  },
+  "devDependencies": {
+    "tsdown": "catalog:dev"
+  }
+}
