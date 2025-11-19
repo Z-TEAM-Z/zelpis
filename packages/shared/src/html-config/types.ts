@@ -58,7 +58,7 @@ export interface Entry {
  * 解析 HTML 选项
  */
 export interface ResolveHtmlOptions {
-  entry: Omit<Entry, 'dslEntrys'>
+  entry: Entry
   defaultHtml?: HtmlConfig
   rootDir?: string
   ensurePlaceholders?: string[]
@@ -68,7 +68,7 @@ export interface ZElpisConfig {
   /**
    * 入口配置
    */
-  entrys: Entry[]
+  entrys: Omit<Entry, 'dslEntrys'>[]
   /**
    * 默认 HTML 配置
    */
