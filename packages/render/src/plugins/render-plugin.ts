@@ -16,6 +16,9 @@ const APP_BODY_START_PLACEHOLDER = STANDARD_PLACEHOLDERS.APP_BODY_START
 const APP_INJECT_SCRIPT_PLACEHOLDER = STANDARD_PLACEHOLDERS.APP_INJECT_SCRIPT
 
 export interface RenderPluginOption {
+  /**
+   * 用于索引 entry 的相对路径
+   */
   baseDir?: string
 }
 

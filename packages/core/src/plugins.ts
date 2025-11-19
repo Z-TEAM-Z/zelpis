@@ -10,7 +10,13 @@ export * from '@zelpis/builder/plugins'
 export * from '@zelpis/render/plugins'
 
 export interface ZelpisPluginOption {
+  /**
+   * 构建插件配置
+   */
   build?: BuilderPluginOption
+  /**
+   * 渲染插件配置
+   */
   render?: RenderPluginOption
 }
 

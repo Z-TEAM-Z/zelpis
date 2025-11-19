@@ -32,10 +32,25 @@ export interface HtmlConfig {
  * 入口配置
  */
 export interface Entry {
+  /**
+   * url base path
+   */
   basePath: string
+  /**
+   * 入口文件路径
+   */
   entryPath: string
+  /**
+   * 当前入口文件对应的 DSL 文件夹路径
+   */
   dslPath?: string
+  /**
+   * 当前入口文件对应的 DSL 文件
+   */
   dslEntrys?: any[]
+  /**
+   * HTML 配置
+   */
   html?: HtmlConfig
 }
 
@@ -43,14 +58,20 @@ export interface Entry {
  * 解析 HTML 选项
  */
 export interface ResolveHtmlOptions {
-  entry: Entry
+  entry: Omit<Entry, 'dslEntrys'>
   defaultHtml?: HtmlConfig
   rootDir?: string
   ensurePlaceholders?: string[]
 }
 
 export interface ZElpisConfig {
+  /**
+   * 入口配置
+   */
   entrys: Entry[]
+  /**
+   * 默认 HTML 配置
+   */
   defaultHtml?: HtmlConfig
 }
 

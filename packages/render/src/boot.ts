@@ -1,21 +1,36 @@
+import type { ReactNode } from 'react'
 import type { Root } from 'react-dom/client'
-import type { App } from 'vue'
+import type { App, Component } from 'vue'
 import { once } from '@zelpis/shared'
 
 interface BaseBootOption {
+  /**
+   * 渲染类型, 当前只支持 csr
+   */
   type?: 'csr' | 'ssr'
+  /**
+   * 框架, 当前只支持 react 和 vue
+   */
   framework: 'react' | 'vue'
-  Component: (props: any) => any
+  /**
+   * 渲染组件
+   */
+  Component: any
+  /**
+   * 挂载函数
+   */
   mount?: (app: any) => void
 }
 
 interface ReactBootOption extends BaseBootOption {
   framework: 'react'
+  Component: (props: any) => ReactNode
   mount?: (app: Root) => void
 }
 
 interface VueBootOption extends BaseBootOption {
   framework: 'vue'
+  Component: Component
   mount?: (app: App) => void
 }
 
@@ -42,7 +57,7 @@ async function createComponent(
 ): Promise<any> {
   if (framework === 'react') {
     const { createElement } = await import('react')
-    return createElement(Component, props)
+    return createElement(Component as ReactBootOption['Component'], props)
   }
   if (framework === 'vue') {
     if (option.type === 'csr') {
