@@ -15,7 +15,7 @@ const VIRTUAL_MODULE_ID = 'virtual:zelpis/render-config'
 const APP_BODY_START_PLACEHOLDER = STANDARD_PLACEHOLDERS.APP_BODY_START
 const APP_INJECT_SCRIPT_PLACEHOLDER = STANDARD_PLACEHOLDERS.APP_INJECT_SCRIPT
 
-interface RenderPluginOption {
+export interface RenderPluginOption {
   baseDir?: string
 }
 

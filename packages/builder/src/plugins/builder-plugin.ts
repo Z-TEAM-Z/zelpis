@@ -13,7 +13,7 @@ const PLUGIN_NAME = 'zelpis-builder-plugin'
 const APP_BODY_START_PLACEHOLDER = STANDARD_PLACEHOLDERS.APP_BODY_START
 const APP_INJECT_SCRIPT_PLACEHOLDER = STANDARD_PLACEHOLDERS.APP_INJECT_SCRIPT
 
-interface BuilderPluginOption {}
+export interface BuilderPluginOption {}
 
 function getInjectScript(entryPath: string, { props }: any): string {
   return dedent`
@@ -38,7 +38,7 @@ async function getDslEntrys(dslPath: string): Promise<DslEntry[]> {
       const name = path.dirname(item.path)
       const segments = name.split('/').filter(seg => seg !== '.')
       return {
-        name,
+        name: name === '.' ? 'index' : name,
         segments,
         filePath,
         content: await loadDsl(dslPath, segments),
