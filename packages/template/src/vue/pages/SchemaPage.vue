@@ -1,10 +1,10 @@
 <script setup>
+import { inject } from 'vue'
 import componentMap from '../components/index'
+import { DSL_INJECTION_KEY } from '../templates/dashboard_v1/main'
 
-defineProps({
-  pageConfig: { type: Object, required: true },
-  dsl: { type: Object, required: true },
-})
+const injectedDsl = inject(DSL_INJECTION_KEY)
+console.log('🚀 ~ injectedDsl:', injectedDsl)
 
 function getComponent(type) {
   const Component = componentMap[type]

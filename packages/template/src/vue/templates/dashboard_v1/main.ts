@@ -2,6 +2,7 @@ import type { InjectionKey } from 'vue'
 import type { DslData } from './types'
 
 import { boot } from '@zelpis/core'
+import { mergeDsl } from '../../utils/dsl.ts'
 import { useInternalRouter } from '../../utils/useInternalRouter'
 import App from './index.vue'
 import 'element-plus/dist/index.css'
@@ -20,8 +21,10 @@ export function render({ dsl }: { dsl: DslData }): ReturnType<typeof boot> {
     framework: 'vue',
     Component: App as any,
     mount(app) {
+      // 获取文件加载的 dsl 数据
+      const dslData = (window as any)?.$zelpis?.hydrateData?.dsl || {}
       app.use(router)
-      app.provide(DSL_INJECTION_KEY, dsl)
+      app.provide(DSL_INJECTION_KEY, mergeDsl(dsl, dslData))
     },
   })
 }
