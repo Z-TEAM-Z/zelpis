@@ -1,67 +1,29 @@
-import type { HtmlConfig, PlaceholderRule, ResolveHtmlOptions } from './types'
+import type { HtmlConfig, HtmlValidationLevel, PlaceholderRule, ResolveHtmlOptions } from './types'
 import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
-
-// 正则表达式
-const HTML_TAG_REGEX = /<html/i
-const HTML_LANG_REGEX = /<html[^>]*\slang=/i
-const HEAD_OPEN_REGEX = /<head[^>]*>/i
-const HEAD_CLOSE_REGEX = /<\/head>/i
-const BODY_OPEN_REGEX = /<body[^>]*>/i
-const BODY_CLOSE_REGEX = /<\/body>/i
-const TITLE_REGEX = /<title>.*?<\/title>/i
-const META_CHARSET_REGEX = /<meta[^>]+charset=/i
-const META_VIEWPORT_REGEX = /<meta[^>]+name="viewport"/i
-const META_DESCRIPTION_REGEX = /<meta[^>]+name="description"/i
-const META_KEYWORDS_REGEX = /<meta[^>]+name="keywords"/i
-const HTML_CLOSE_REGEX = /<\/html>/i
-const HTML_LANG_REPLACE_REGEX = /(<html[^>]*\s)lang="[^"]*"/i
-const BODY_REPLACE_REGEX = /<body([^>]*)>/i
-const BODY_FULL_REGEX = /<body([^>]*)>([\s\S]*?)<\/body>/i
-const META_CHARSET_REPLACE_REGEX = /(<meta[^>]+)charset="[^"]*"/i
-const META_VIEWPORT_REPLACE_REGEX = /(<meta[^>]+name="viewport"[^>]+)content="[^"]*"/i
-const META_DESCRIPTION_REPLACE_REGEX = /(<meta[^>]+name="description"[^>]+)content="[^"]*"/i
-const META_KEYWORDS_REPLACE_REGEX = /(<meta[^>]+name="keywords"[^>]+)content="[^"]*"/i
-
-// 默认模板
-const DEFAULT_HTML_TEMPLATE = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Zelpis App</title>
-</head>
-<body>
-  <div id="app"></div>
-</body>
-</html>`
-
-/**
- * 创建占位符
- * @param name 占位符名称
- */
-function createPlaceholder(name: string): string {
-  return `<!-- zelpis:${name} -->`
-}
-
-// 标注占位符，用于预定义占位符
-export const STANDARD_PLACEHOLDERS = {
-  APP_BODY_START: createPlaceholder('app-body-start'),
-  APP_INJECT_SCRIPT: createPlaceholder('app-inject-script'),
-} as const
+import * as constants from './constants'
+import {
+  cleanAppInjectScript,
+  formatValidationOutput,
+  smartMergePlaceholders,
+  STANDARD_PLACEHOLDERS,
+  validateHtmlTemplate,
+} from './utils'
 
 // 占位符规则 Map
 const PREDEFINED_RULES = new Map<string, PlaceholderRule>([
   [STANDARD_PLACEHOLDERS.APP_BODY_START, {
-    target: BODY_OPEN_REGEX,
+    target: constants.BODY_OPEN_REGEX,
     position: 'after',
     func: insertPlaceholder,
+    cleanPatterns: [/<div\s+id=["']app["']>\s*<\/div>/gi],
   }],
   [STANDARD_PLACEHOLDERS.APP_INJECT_SCRIPT, {
-    target: BODY_CLOSE_REGEX,
+    target: constants.BODY_CLOSE_REGEX,
     position: 'before',
     func: insertPlaceholder,
+    cleanPatterns: [cleanAppInjectScript],
   }],
 ])
 
@@ -75,12 +37,23 @@ const PREDEFINED_RULES = new Map<string, PlaceholderRule>([
  * @platform node
  */
 export function resolveHtmlTemplate(options: ResolveHtmlOptions): string {
-  const { entry, defaultHtml, rootDir = process.cwd(), ensurePlaceholders = [] } = options
+  const {
+    entry,
+    defaultHtml,
+    rootDir = process.cwd(),
+    replacements = {},
+    context = {},
+    validateCustom = 'warn',
+  } = options
   const htmlConfig = { ...defaultHtml, ...entry.html }
 
   // custom 完全覆盖
   if (htmlConfig.custom) {
-    return ensureHtmlPlaceholder(htmlConfig.custom, ensurePlaceholders)
+    // 如果启用校验（不是 false）
+    if (validateCustom !== false) {
+      validateCustomHtml(htmlConfig.custom, validateCustom)
+    }
+    return ensureHtmlPlaceholder(htmlConfig.custom, replacements, context)
   }
 
   // 获取基础模板
@@ -91,7 +64,26 @@ export function resolveHtmlTemplate(options: ResolveHtmlOptions): string {
     html = applyHtmlConfig(html, htmlConfig)
   }
 
-  return ensureHtmlPlaceholder(html, ensurePlaceholders)
+  return ensureHtmlPlaceholder(html, replacements, context)
+}
+
+/**
+ * 校验 HTML 模板
+ */
+function validateCustomHtml(html: string, validateCustom: HtmlValidationLevel): void {
+  const validation = validateHtmlTemplate(html)
+  // 输出校验结果
+  if (validation.warnings.length > 0 || validation.errors.length > 0) {
+    formatValidationOutput(validation, validateCustom)
+  }
+
+  // strict 模式下，如果校验失败则抛出错误
+  if (validateCustom === 'strict' && !validation.valid) {
+    throw new Error(
+      `Custom HTML validation failed:\n${
+        validation.errors.map(e => `  - ${e}`).join('\n')}`,
+    )
+  }
 }
 
 /**
@@ -121,7 +113,7 @@ function getBaseTemplate(config: HtmlConfig, rootDir: string): string {
   }
 
   // 使用内置默认模板
-  return DEFAULT_HTML_TEMPLATE
+  return constants.DEFAULT_HTML_TEMPLATE
 }
 
 /**
@@ -161,10 +153,10 @@ function applyMetaConfig(html: string, meta: NonNullable<HtmlConfig['meta']>): s
     const escapedLang = escapeAttrValue(lang)
     result = updateOrInsert(
       result,
-      HTML_LANG_REGEX,
-      HTML_LANG_REPLACE_REGEX,
+      constants.HTML_LANG_REGEX,
+      constants.HTML_LANG_REPLACE_REGEX,
       `$1lang="${escapedLang}"`,
-      HTML_TAG_REGEX,
+      constants.HTML_TAG_REGEX,
       `<html lang="${escapedLang}"`,
     )
   }
@@ -175,10 +167,10 @@ function applyMetaConfig(html: string, meta: NonNullable<HtmlConfig['meta']>): s
       const escapedCharset = escapeAttrValue(charset)
       result = updateOrInsert(
         result,
-        META_CHARSET_REGEX,
-        META_CHARSET_REPLACE_REGEX,
+        constants.META_CHARSET_REGEX,
+        constants.META_CHARSET_REPLACE_REGEX,
         `$1charset="${escapedCharset}"`,
-        HEAD_OPEN_REGEX,
+        constants.HEAD_OPEN_REGEX,
         `$&\n  <meta charset="${escapedCharset}" />`,
       )
     }
@@ -186,29 +178,29 @@ function applyMetaConfig(html: string, meta: NonNullable<HtmlConfig['meta']>): s
 
   // 设置或更新 viewport
   if (viewport) {
-    result = updateMetaTag(result, 'viewport', viewport, META_VIEWPORT_REGEX, META_VIEWPORT_REPLACE_REGEX)
+    result = updateMetaTag(result, 'viewport', viewport, constants.META_VIEWPORT_REGEX, constants.META_VIEWPORT_REPLACE_REGEX)
   }
 
   // 设置或更新 title
   if (title) {
     result = updateOrInsert(
       result,
-      TITLE_REGEX,
-      TITLE_REGEX,
+      constants.TITLE_REGEX,
+      constants.TITLE_REGEX,
       `<title>${title}</title>`,
-      HEAD_CLOSE_REGEX,
+      constants.HEAD_CLOSE_REGEX,
       `<title>${title}</title>\n</head>`,
     )
   }
 
   // 设置或更新 description
   if (description) {
-    result = updateMetaTag(result, 'description', description, META_DESCRIPTION_REGEX, META_DESCRIPTION_REPLACE_REGEX)
+    result = updateMetaTag(result, 'description', description, constants.META_DESCRIPTION_REGEX, constants.META_DESCRIPTION_REPLACE_REGEX)
   }
 
   // 设置或更新 keywords
   if (keywords) {
-    result = updateMetaTag(result, 'keywords', keywords, META_KEYWORDS_REGEX, META_KEYWORDS_REPLACE_REGEX)
+    result = updateMetaTag(result, 'keywords', keywords, constants.META_KEYWORDS_REGEX, constants.META_KEYWORDS_REPLACE_REGEX)
   }
 
   return result
@@ -222,7 +214,7 @@ function applyHeadContent(html: string, headContent: string[]): string {
     return html
 
   const content = headContent.join('\n')
-  return html.replace(HEAD_CLOSE_REGEX, `${content}\n</head>`)
+  return html.replace(constants.HEAD_CLOSE_REGEX, `${content}\n</head>`)
 }
 
 /**
@@ -237,8 +229,8 @@ function applyBodyConfig(html: string, bodyConfig: NonNullable<HtmlConfig['body'
       .map(([key, value]) => `${key}="${escapeAttrValue(value)}"`)
       .join(' ')
 
-    if (BODY_OPEN_REGEX.test(result)) {
-      result = result.replace(BODY_REPLACE_REGEX, (match, existingAttrs) => {
+    if (constants.BODY_OPEN_REGEX.test(result)) {
+      result = result.replace(constants.BODY_REPLACE_REGEX, (match, existingAttrs) => {
         const trimmedAttrs = existingAttrs.trim()
         if (trimmedAttrs) {
           return `<body ${trimmedAttrs} ${newAttrs}>`
@@ -251,7 +243,7 @@ function applyBodyConfig(html: string, bodyConfig: NonNullable<HtmlConfig['body'
   // 替换 body 内容
   if (bodyConfig.content) {
     result = result.replace(
-      BODY_FULL_REGEX,
+      constants.BODY_FULL_REGEX,
       (match, attrs) => {
         return `<body${attrs}>\n${bodyConfig.content}\n</body>`
       },
@@ -265,9 +257,28 @@ function applyBodyConfig(html: string, bodyConfig: NonNullable<HtmlConfig['body'
  * 确保 HTML 模板包含必需的注入占位符
  * 如果缺失，会自动添加
  */
-function ensureHtmlPlaceholder(html: string, placeholders: string[]): string {
+function ensureHtmlPlaceholder(html: string, replacements: Record<string, string>, context: Record<string, any>): string {
   let result = html
+  const placeholders = Object.keys(replacements)
 
+  // 第一步：清理模板中的默认内容
+  for (const placeholder of placeholders) {
+    const rule = PREDEFINED_RULES.get(placeholder)
+    if (rule?.cleanPatterns) {
+      for (const pattern of rule.cleanPatterns) {
+        if (typeof pattern === 'function') {
+          // 函数类型：直接调用
+          result = pattern(result, context)
+        }
+        else {
+          // 正则类型：执行替换
+          result = result.replace(pattern, '')
+        }
+      }
+    }
+  }
+
+  // 第二步：确保占位符存在
   for (const placeholder of placeholders) {
     const rule = PREDEFINED_RULES.get(placeholder)
     if (rule) {
@@ -275,7 +286,43 @@ function ensureHtmlPlaceholder(html: string, placeholders: string[]): string {
     }
   }
 
+  // 第三步：确保每个占位符只出现一次
+  for (const placeholder of placeholders) {
+    const firstIndex = result.indexOf(placeholder)
+    if (firstIndex !== -1) {
+      const before = result.substring(0, firstIndex + placeholder.length)
+      const after = result.substring(firstIndex + placeholder.length)
+      result = before + after.replaceAll(placeholder, '')
+    }
+  }
+
+  // 第四步：执行替换（智能合并）
+  for (const [placeholder, replacement] of Object.entries(replacements)) {
+    // 特殊处理：尝试合并到已有的内联 script
+    if (placeholder === STANDARD_PLACEHOLDERS.APP_INJECT_SCRIPT) {
+      result = smartMergePlaceholders(replacement, result, placeholder)
+    }
+    else {
+      // 其他占位符正常替换
+      result = result.replace(placeholder, replacement)
+    }
+  }
+
+  // 第五步：清理多余的空行和空白
+  result = cleanupWhitespace(result)
+
   return result
+}
+
+/**
+ * 清理 HTML 中多余的空行和空白
+ */
+function cleanupWhitespace(html: string): string {
+  return html
+    // 删除连续的空行（保留最多一个空行）
+    .replace(/\n\s*\n\s*\n/g, '\n\n')
+    // 清理行尾空格
+    .replace(/[ \t]+$/gm, '')
 }
 
 /**
@@ -296,14 +343,14 @@ function insertPlaceholder(html: string, placeholder: string, rule: PlaceholderR
   }
 
   // 兜底：</head> > </body> > </html>
-  if (HEAD_CLOSE_REGEX.test(html)) {
-    return html.replace(HEAD_CLOSE_REGEX, `  ${placeholder}\n</head>`)
+  if (constants.HEAD_CLOSE_REGEX.test(html)) {
+    return html.replace(constants.HEAD_CLOSE_REGEX, `  ${placeholder}\n</head>`)
   }
-  if (BODY_CLOSE_REGEX.test(html)) {
-    return html.replace(BODY_CLOSE_REGEX, `  ${placeholder}\n</body>`)
+  if (constants.BODY_CLOSE_REGEX.test(html)) {
+    return html.replace(constants.BODY_CLOSE_REGEX, `  ${placeholder}\n</body>`)
   }
-  if (HTML_CLOSE_REGEX.test(html)) {
-    return html.replace(HTML_CLOSE_REGEX, `  ${placeholder}\n</html>`)
+  if (constants.HTML_CLOSE_REGEX.test(html)) {
+    return html.replace(constants.HTML_CLOSE_REGEX, `  ${placeholder}\n</html>`)
   }
 
   // 最后的兜底：插入到文档末尾
@@ -359,7 +406,7 @@ function updateMetaTag(
     checkRegex,
     updateRegex,
     `$1content="${escapedValue}"`,
-    HEAD_CLOSE_REGEX,
+    constants.HEAD_CLOSE_REGEX,
     `<meta name="${name}" content="${escapedValue}" />\n</head>`,
   )
 }

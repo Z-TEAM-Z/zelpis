@@ -3,8 +3,7 @@ import type { Plugin } from 'vite'
 import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
-import { resolveHtmlTemplate, STANDARD_PLACEHOLDERS } from '@zelpis/shared/html-config'
-import { dedent } from 'ts-dedent'
+import { getInjectScript, resolveHtmlTemplate, STANDARD_PLACEHOLDERS } from '@zelpis/shared/html-config'
 import { mergeDsl } from '../dsl/merge'
 
 const PLUGIN_NAME = 'zelpis-render-plugin'
@@ -38,15 +37,6 @@ export function renderPlugin(option: RenderPluginOption): Plugin {
   const resolveVirtualModuleId = `\0${VIRTUAL_MODULE_ID}`
 
   const parsedConfig: ZElpisConfig & RenderPluginOption = {} as any
-
-  function getInjectScript(entryPath: string, props: Record<string, unknown>): string {
-    return dedent`
-      <script type="module" defer src="${entryPath}"></script>
-      <script>
-        window.$zelpis = { hydrateData: ${JSON.stringify(props)}};
-      </script>
-    `
-  }
 
   return {
     name: PLUGIN_NAME,
@@ -159,14 +149,6 @@ export function renderPlugin(option: RenderPluginOption): Plugin {
         // 计算出相对路径
         const relativeEntryPath = `/${path.relative(rootDir, entryFilePath).replace(/\\/g, '/')}`
 
-        // 解析 HTML 模板
-        const htmlTemplate = resolveHtmlTemplate({
-          entry,
-          defaultHtml: zelpisConfig.defaultHtml,
-          rootDir,
-          ensurePlaceholders: [APP_BODY_START_PLACEHOLDER, APP_INJECT_SCRIPT_PLACEHOLDER],
-        })
-
         server.middlewares.use(async (req, res, next) => {
           try {
             if (!req.url || req.method !== 'GET')
@@ -198,6 +180,23 @@ export function renderPlugin(option: RenderPluginOption): Plugin {
             // 使用 Vite 的 ssrLoadModule 加载 DSL，避免 .ts 扩展名问题
             const dsl = await loadDslWithVite(entry.dslPath!, dslName)
 
+            const props = { dsl }
+
+            // 解析 HTML 模板
+            const htmlTemplate = resolveHtmlTemplate({
+              entry,
+              defaultHtml: zelpisConfig.defaultHtml,
+              rootDir,
+              replacements: {
+                [APP_BODY_START_PLACEHOLDER]: '<div id="app"></div>',
+                [APP_INJECT_SCRIPT_PLACEHOLDER]: getInjectScript(relativeEntryPath, { props }),
+              },
+              context: {
+                entryPath: relativeEntryPath, // 传入 entryPath 用于精准匹配
+              },
+              validateCustom: zelpisConfig.validateCustomHtml || 'warn',
+            })
+
             const template = await server.transformIndexHtml(url, htmlTemplate, req.originalUrl)
             // const {
             //   default: { render },
@@ -205,20 +204,11 @@ export function renderPlugin(option: RenderPluginOption): Plugin {
             //   .ssrLoadModule(entryFilePath)
             //   .catch(() => ({ default: { render: () => ({ html: '<div id="app"></div>' }) } }))
 
-            const props = { dsl }
             // const rendered = await render(props)
-
-            const html = template
-              // .replace('<!-- app-head -->', rendered.head ?? '')
-              .replace(APP_BODY_START_PLACEHOLDER, '<div id="app"></div>')
-              .replace(
-                APP_INJECT_SCRIPT_PLACEHOLDER,
-                getInjectScript(relativeEntryPath, props),
-              )
 
             res.statusCode = 200
             res.setHeader('Content-Type', 'text/html')
-            res.end(html)
+            res.end(template)
           }
           catch (e: any) {
             server.ssrFixStacktrace(e)

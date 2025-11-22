@@ -19,12 +19,18 @@
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch"
   },
+  "dependencies": {
+    "parse5": "catalog:"
+  },
   "devDependencies": {
+    "@types/parse5": "catalog:",
     "tsdown": "catalog:dev"
   }
 }

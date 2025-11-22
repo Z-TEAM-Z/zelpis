@@ -55,13 +55,33 @@ export interface Entry {
 }
 
 /**
+ * HTML 校验级别
+ */
+export type HtmlValidationLevel = false | 'warn' | 'strict'
+
+/**
+ * HTML 校验结果
+ */
+export interface HtmlValidationResult {
+  /** 是否通过校验 */
+  valid: boolean
+  /** 警告信息 */
+  warnings: string[]
+  /** 错误信息（仅在 strict 模式下有值） */
+  errors: string[]
+}
+
+/**
  * 解析 HTML 选项
  */
 export interface ResolveHtmlOptions {
   entry: Entry
   defaultHtml?: HtmlConfig
   rootDir?: string
-  ensurePlaceholders?: string[]
+  replacements?: Record<string, string>
+  context?: Record<string, any>
+  /** HTML 校验级别，默认 'warn' */
+  validateCustom?: HtmlValidationLevel
 }
 
 export interface ZElpisConfig {
@@ -73,10 +93,20 @@ export interface ZElpisConfig {
    * 默认 HTML 配置
    */
   defaultHtml?: HtmlConfig
+  /**
+   * HTML 校验级别
+   * - false: 不校验
+   * - 'warn': 只警告（默认）
+   * - 'strict': 严格模式，有错误则抛出异常
+   */
+  validateCustomHtml?: HtmlValidationLevel
 }
+
+type CleanPattern = RegExp | ((html: string, context?: Record<string, any>) => string)
 
 export interface PlaceholderRule {
   target: RegExp
   position: 'before' | 'after'
   func: (html: string, placeholder: string, rule: PlaceholderRule) => string
+  cleanPatterns?: CleanPattern[]
 }
