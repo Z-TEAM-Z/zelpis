@@ -39,6 +39,9 @@ catalogs:
     lint-staged:
       specifier: ^15.5.2
       version: 15.5.2
+    parse5:
+      specifier: ^8.0.0
+      version: 8.0.0
     pkg-types:
       specifier: ^2.3.0
       version: 2.3.0
@@ -124,6 +127,9 @@ catalogs:
     '@types/node':
       specifier: ^22.18.6
       version: 22.18.6
+    '@types/parse5':
+      specifier: ^7.0.0
+      version: 7.0.0
     '@types/react':
       specifier: ^19.1.13
       version: 19.2.2
@@ -369,11 +375,11 @@ importers:
   packages/shared:
     dependencies:
       parse5:
-        specifier: ^8.0.0
+        specifier: catalog:dev
         version: 8.0.0
     devDependencies:
       '@types/parse5':
-        specifier: ^7.0.0
+        specifier: catalog:types
         version: 7.0.0
       tsdown:
         specifier: catalog:dev

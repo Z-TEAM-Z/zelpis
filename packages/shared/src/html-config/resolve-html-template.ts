@@ -1,40 +1,29 @@
-import type { HtmlConfig, HtmlValidationLevel, PlaceholderRule, ResolveHtmlOptions } from './types'
+// packages/shared/src/html-config/resolve-html-template.ts
+import type { HtmlConfig, HtmlValidationLevel, ResolveHtmlOptions } from './types'
 import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
 import * as constants from './constants'
 import {
+  appendHtml,
   cleanAppInjectScript,
+  findElement,
+  findMetaByName,
   formatValidationOutput,
+  getAttribute,
+  getOrCreateElement,
+  parseHtml,
+  replaceBodyContent,
+  serializeHtml,
+  setAttribute,
+  setTextContent,
   smartMergePlaceholders,
   STANDARD_PLACEHOLDERS,
   validateHtmlTemplate,
 } from './utils'
 
-// 占位符规则 Map
-const PREDEFINED_RULES = new Map<string, PlaceholderRule>([
-  [STANDARD_PLACEHOLDERS.APP_BODY_START, {
-    target: constants.BODY_OPEN_REGEX,
-    position: 'after',
-    func: insertPlaceholder,
-    cleanPatterns: [/<div\s+id=["']app["']>\s*<\/div>/gi],
-  }],
-  [STANDARD_PLACEHOLDERS.APP_INJECT_SCRIPT, {
-    target: constants.BODY_CLOSE_REGEX,
-    position: 'before',
-    func: insertPlaceholder,
-    cleanPatterns: [cleanAppInjectScript],
-  }],
-])
-
 /**
  * 解析 HTML 模板
- *
- * 优先级：
- * 1. custom - 完全自定义 HTML（最高优先级，忽略其他配置）
- * 2. 基础模板（template > index.html > 内置）+ meta/head/body 增强
- *
- * @platform node
  */
 export function resolveHtmlTemplate(options: ResolveHtmlOptions): string {
   const {
@@ -47,21 +36,17 @@ export function resolveHtmlTemplate(options: ResolveHtmlOptions): string {
   } = options
   const htmlConfig = { ...defaultHtml, ...entry.html }
 
-  // custom 完全覆盖
-  if (htmlConfig.custom) {
-    // 如果启用校验（不是 false）
-    if (validateCustom !== false) {
-      validateCustomHtml(htmlConfig.custom, validateCustom)
-    }
-    return ensureHtmlPlaceholder(htmlConfig.custom, replacements, context)
+  // 获取基础模板
+  let html = htmlConfig.custom || getBaseTemplate(htmlConfig, rootDir)
+
+  // 应用配置增强（custom 完全覆盖其他配置）
+  if (!htmlConfig.custom && (htmlConfig.meta || htmlConfig.head || htmlConfig.body)) {
+    html = applyHtmlConfig(html, htmlConfig)
   }
 
-  // 获取基础模板
-  let html = getBaseTemplate(htmlConfig, rootDir)
-
-  // 应用配置增强
-  if (htmlConfig.meta || htmlConfig.head || htmlConfig.body) {
-    html = applyHtmlConfig(html, htmlConfig)
+  // 如果启用校验（不是 false）
+  if (validateCustom !== false) {
+    validateCustomHtml(html, validateCustom)
   }
 
   return ensureHtmlPlaceholder(html, replacements, context)
@@ -106,183 +91,177 @@ function getBaseTemplate(config: HtmlConfig, rootDir: string): string {
     }
   }
 
-  // 尝试使用默认的 index.html
   const defaultPath = path.resolve(rootDir, 'index.html')
   if (fs.existsSync(defaultPath)) {
     return fs.readFileSync(defaultPath, 'utf-8')
   }
 
-  // 使用内置默认模板
   return constants.DEFAULT_HTML_TEMPLATE
 }
 
 /**
- * 在基础 HTML 模板上应用配置
- * 使用字符串替换和正则表达式
+ * 使用 DOM 操作应用 HTML 配置
  */
 function applyHtmlConfig(html: string, config: HtmlConfig): string {
-  let result = html
+  // 解析为 DOM
+  const document = parseHtml(html)
 
   // 应用 meta 配置
   if (config.meta) {
-    result = applyMetaConfig(result, config.meta)
+    applyMetaConfig(document, config.meta)
   }
 
-  // 在 head 中追加额外内容
+  // 应用 head 内容
   if (config.head && config.head.length > 0) {
-    result = applyHeadContent(result, config.head)
+    applyHeadContent(document, config.head)
   }
 
   // 应用 body 配置
   if (config.body) {
-    result = applyBodyConfig(result, config.body)
+    applyBodyConfig(document, config.body)
   }
 
-  return result
+  // 序列化回 HTML
+  return serializeHtml(document)
 }
 
 /**
- * 应用 meta 配置
+ * 使用 DOM 应用 meta 配置
  */
-function applyMetaConfig(html: string, meta: NonNullable<HtmlConfig['meta']>): string {
-  let result = html
+function applyMetaConfig(
+  document: any,
+  meta: NonNullable<HtmlConfig['meta']>,
+): void {
   const { title, description, keywords, viewport, charset, lang } = meta
 
   // 设置 html lang 属性
   if (lang) {
-    const escapedLang = escapeAttrValue(lang)
-    result = updateOrInsert(
-      result,
-      constants.HTML_LANG_REGEX,
-      constants.HTML_LANG_REPLACE_REGEX,
-      `$1lang="${escapedLang}"`,
-      constants.HTML_TAG_REGEX,
-      `<html lang="${escapedLang}"`,
-    )
-  }
-
-  // 设置或更新 charset
-  if (charset) {
-    if (charset) {
-      const escapedCharset = escapeAttrValue(charset)
-      result = updateOrInsert(
-        result,
-        constants.META_CHARSET_REGEX,
-        constants.META_CHARSET_REPLACE_REGEX,
-        `$1charset="${escapedCharset}"`,
-        constants.HEAD_OPEN_REGEX,
-        `$&\n  <meta charset="${escapedCharset}" />`,
-      )
+    const htmlEl = findElement(document, 'html')
+    if (htmlEl) {
+      setAttribute(htmlEl, 'lang', lang)
     }
   }
 
-  // 设置或更新 viewport
-  if (viewport) {
-    result = updateMetaTag(result, 'viewport', viewport, constants.META_VIEWPORT_REGEX, constants.META_VIEWPORT_REPLACE_REGEX)
+  // 设置 charset
+  if (charset) {
+    const head = findElement(document, 'head')
+    if (head) {
+      const metas = head.childNodes.filter(
+        node => 'tagName' in node && node.tagName === 'meta',
+      )
+      const charsetMeta = metas.find(meta =>
+        getAttribute(meta as any, 'charset') !== null,
+      )
+
+      if (charsetMeta) {
+        setAttribute(charsetMeta as any, 'charset', charset)
+      }
+      else {
+        // 创建新的 charset meta
+        appendHtml(head, `<meta charset="${charset}" />`)
+      }
+    }
   }
 
-  // 设置或更新 title
+  // 设置 title
   if (title) {
-    result = updateOrInsert(
-      result,
-      constants.TITLE_REGEX,
-      constants.TITLE_REGEX,
-      `<title>${title}</title>`,
-      constants.HEAD_CLOSE_REGEX,
-      `<title>${title}</title>\n</head>`,
-    )
+    const titleEl = getOrCreateElement(document, 'head', 'title')
+    setTextContent(titleEl, title)
   }
 
-  // 设置或更新 description
+  // 设置其他 meta 标签
+  if (viewport) {
+    updateMetaTag(document, 'viewport', viewport)
+  }
   if (description) {
-    result = updateMetaTag(result, 'description', description, constants.META_DESCRIPTION_REGEX, constants.META_DESCRIPTION_REPLACE_REGEX)
+    updateMetaTag(document, 'description', description)
   }
-
-  // 设置或更新 keywords
   if (keywords) {
-    result = updateMetaTag(result, 'keywords', keywords, constants.META_KEYWORDS_REGEX, constants.META_KEYWORDS_REPLACE_REGEX)
+    updateMetaTag(document, 'keywords', keywords)
   }
-
-  return result
 }
 
 /**
- * 在 head 中追加额外内容
+ * 更新或创建 meta 标签
  */
-function applyHeadContent(html: string, headContent: string[]): string {
-  if (!headContent.length)
-    return html
+function updateMetaTag(document: any, name: string, content: string): void {
+  const meta = findMetaByName(document, name)
 
-  const content = headContent.join('\n')
-  return html.replace(constants.HEAD_CLOSE_REGEX, `${content}\n</head>`)
+  if (meta) {
+    setAttribute(meta, 'content', content)
+  }
+  else {
+    const head = findElement(document, 'head')
+    if (head) {
+      appendHtml(head, `<meta name="${name}" content="${content}" />`)
+    }
+  }
 }
 
 /**
- * 应用 body 配置
+ * 使用 DOM 应用 head 内容
  */
-function applyBodyConfig(html: string, bodyConfig: NonNullable<HtmlConfig['body']>): string {
-  let result = html
+function applyHeadContent(document: any, headContent: string[]): void {
+  const head = findElement(document, 'head')
+  if (!head)
+    return
+
+  for (const content of headContent) {
+    appendHtml(head, content)
+  }
+}
+
+/**
+ * 使用 DOM 应用 body 配置
+ */
+function applyBodyConfig(
+  document: any,
+  bodyConfig: NonNullable<HtmlConfig['body']>,
+): void {
+  const body = findElement(document, 'body')
+  if (!body)
+    return
 
   // 设置 body 属性
   if (bodyConfig.attributes) {
-    const newAttrs = Object.entries(bodyConfig.attributes)
-      .map(([key, value]) => `${key}="${escapeAttrValue(value)}"`)
-      .join(' ')
-
-    if (constants.BODY_OPEN_REGEX.test(result)) {
-      result = result.replace(constants.BODY_REPLACE_REGEX, (match, existingAttrs) => {
-        const trimmedAttrs = existingAttrs.trim()
-        if (trimmedAttrs) {
-          return `<body ${trimmedAttrs} ${newAttrs}>`
-        }
-        return `<body ${newAttrs}>`
-      })
+    for (const [key, value] of Object.entries(bodyConfig.attributes)) {
+      setAttribute(body, key, value)
     }
   }
 
   // 替换 body 内容
   if (bodyConfig.content) {
-    result = result.replace(
-      constants.BODY_FULL_REGEX,
-      (match, attrs) => {
-        return `<body${attrs}>\n${bodyConfig.content}\n</body>`
-      },
-    )
+    replaceBodyContent(document, bodyConfig.content)
   }
-
-  return result
 }
 
 /**
- * 确保 HTML 模板包含必需的注入占位符
- * 如果缺失，会自动添加
+ * 确保 HTML 包含占位符
+ * 这部分仍然保留字符串操作，因为占位符是注释节点，更适合字符串处理
  */
-function ensureHtmlPlaceholder(html: string, replacements: Record<string, string>, context: Record<string, any>): string {
+function ensureHtmlPlaceholder(
+  html: string,
+  replacements: Record<string, string>,
+  context: Record<string, any>,
+): string {
   let result = html
   const placeholders = Object.keys(replacements)
 
   // 第一步：清理模板中的默认内容
   for (const placeholder of placeholders) {
-    const rule = PREDEFINED_RULES.get(placeholder)
-    if (rule?.cleanPatterns) {
-      for (const pattern of rule.cleanPatterns) {
-        if (typeof pattern === 'function') {
-          // 函数类型：直接调用
-          result = pattern(result, context)
-        }
-        else {
-          // 正则类型：执行替换
-          result = result.replace(pattern, '')
-        }
-      }
+    if (placeholder === STANDARD_PLACEHOLDERS.APP_INJECT_SCRIPT) {
+      result = cleanAppInjectScript(result, context)
+    }
+    // 清理 <div id="app"></div>
+    if (placeholder === STANDARD_PLACEHOLDERS.APP_BODY_START) {
+      result = result.replace(/<div\s+id=["']app["']>\s*<\/div>/gi, '')
     }
   }
 
   // 第二步：确保占位符存在
   for (const placeholder of placeholders) {
-    const rule = PREDEFINED_RULES.get(placeholder)
-    if (rule) {
-      result = rule.func(result, placeholder, rule)
+    if (!result.includes(placeholder)) {
+      result = insertPlaceholder(result, placeholder)
     }
   }
 
@@ -296,117 +275,49 @@ function ensureHtmlPlaceholder(html: string, replacements: Record<string, string
     }
   }
 
-  // 第四步：执行替换（智能合并）
+  // 第四步：执行替换
   for (const [placeholder, replacement] of Object.entries(replacements)) {
-    // 特殊处理：尝试合并到已有的内联 script
     if (placeholder === STANDARD_PLACEHOLDERS.APP_INJECT_SCRIPT) {
       result = smartMergePlaceholders(replacement, result, placeholder)
     }
     else {
-      // 其他占位符正常替换
       result = result.replace(placeholder, replacement)
     }
   }
 
-  // 第五步：清理多余的空行和空白
+  // 第五步：清理空白
   result = cleanupWhitespace(result)
 
   return result
 }
 
 /**
- * 清理 HTML 中多余的空行和空白
+ * 插入占位符（简化版，只处理关键位置）
  */
-function cleanupWhitespace(html: string): string {
-  return html
-    // 删除连续的空行（保留最多一个空行）
-    .replace(/\n\s*\n\s*\n/g, '\n\n')
-    // 清理行尾空格
-    .replace(/[ \t]+$/gm, '')
-}
-
-/**
- * 根据占位符名称中的关键词判断应该插入的位置
- */
-function insertPlaceholder(html: string, placeholder: string, rule: PlaceholderRule): string {
-  // 如果已存在，跳过
-  if (html.includes(placeholder)) {
-    return html
+function insertPlaceholder(html: string, placeholder: string): string {
+  if (placeholder.includes('app-body-start')) {
+    // 在 <body> 后插入
+    return html.replace(/<body([^>]*)>/i, `$&\n  ${placeholder}`)
   }
 
-  // 如果匹配到规则，插入占位符
-  if (rule.target.test(html)) {
-    const replacement = rule.position === 'after'
-      ? `$&\n  ${placeholder}`
-      : `  ${placeholder}\n$&`
-    return html.replace(rule.target, replacement)
+  if (placeholder.includes('app-inject-script')) {
+    // 在 </body> 前插入
+    return html.replace(/<\/body>/i, `  ${placeholder}\n</body>`)
   }
 
-  // 兜底：</head> > </body> > </html>
-  if (constants.HEAD_CLOSE_REGEX.test(html)) {
-    return html.replace(constants.HEAD_CLOSE_REGEX, `  ${placeholder}\n</head>`)
-  }
-  if (constants.BODY_CLOSE_REGEX.test(html)) {
-    return html.replace(constants.BODY_CLOSE_REGEX, `  ${placeholder}\n</body>`)
-  }
-  if (constants.HTML_CLOSE_REGEX.test(html)) {
-    return html.replace(constants.HTML_CLOSE_REGEX, `  ${placeholder}\n</html>`)
+  // 兜底：在 </body> 前插入
+  if (/<\/body>/i.test(html)) {
+    return html.replace(/<\/body>/i, `  ${placeholder}\n</body>`)
   }
 
-  // 最后的兜底：插入到文档末尾
   return `${html}\n${placeholder}`
 }
 
 /**
- * 转义 HTML 属性值中的双引号，防止属性值中的双引号破坏 HTML 结构
+ * 清理空白
  */
-function escapeAttrValue(text: string): string {
-  return text.replace(/"/g, '&quot;')
-}
-
-/**
- * 通用的更新或插入函数
- * @param html 原始 HTML
- * @param checkRegex 检测是否存在的正则
- * @param updateRegex 更新时使用的正则
- * @param updateReplacement 更新时的替换内容
- * @param fallbackRegex 如果不存在，在此位置插入
- * @param fallbackReplacement 插入时的替换内容
- */
-function updateOrInsert(
-  html: string,
-  checkRegex: RegExp,
-  updateRegex: RegExp,
-  updateReplacement: string,
-  fallbackRegex: RegExp,
-  fallbackReplacement: string,
-): string {
-  if (checkRegex.test(html)) {
-    return html.replace(updateRegex, updateReplacement)
-  }
-  if (fallbackRegex.test(html)) {
-    return html.replace(fallbackRegex, fallbackReplacement)
-  }
+function cleanupWhitespace(html: string): string {
   return html
-}
-
-/**
- * 辅助函数：更新 meta 标签的 content
- */
-function updateMetaTag(
-  html: string,
-  name: string,
-  value: string,
-  checkRegex: RegExp,
-  updateRegex: RegExp,
-): string {
-  const escapedValue = escapeAttrValue(value)
-  return updateOrInsert(
-    html,
-    checkRegex,
-    updateRegex,
-    `$1content="${escapedValue}"`,
-    constants.HEAD_CLOSE_REGEX,
-    `<meta name="${name}" content="${escapedValue}" />\n</head>`,
-  )
+    .replace(/\n\s*\n\s*\n/g, '\n\n')
+    .replace(/[ \t]+$/gm, '')
 }

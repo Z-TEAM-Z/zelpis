@@ -27,10 +27,10 @@
     "dev": "tsdown --watch"
   },
   "dependencies": {
-    "parse5": "catalog:"
+    "parse5": "catalog:dev"
   },
   "devDependencies": {
-    "@types/parse5": "catalog:",
+    "@types/parse5": "catalog:types",
     "tsdown": "catalog:dev"
   }
 }

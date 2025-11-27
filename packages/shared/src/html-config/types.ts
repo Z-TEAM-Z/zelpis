@@ -101,12 +101,3 @@ export interface ZElpisConfig {
    */
   validateCustomHtml?: HtmlValidationLevel
 }
-
-type CleanPattern = RegExp | ((html: string, context?: Record<string, any>) => string)
-
-export interface PlaceholderRule {
-  target: RegExp
-  position: 'before' | 'after'
-  func: (html: string, placeholder: string, rule: PlaceholderRule) => string
-  cleanPatterns?: CleanPattern[]
-}
