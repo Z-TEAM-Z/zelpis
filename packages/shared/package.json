@@ -27,6 +27,7 @@
     "dev": "tsdown --watch"
   },
   "dependencies": {
+    "node-html-parser": "catalog:dev",
     "parse5": "catalog:dev"
   },
   "devDependencies": {

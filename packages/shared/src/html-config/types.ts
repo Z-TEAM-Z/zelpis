@@ -55,20 +55,10 @@ export interface Entry {
 }
 
 /**
- * HTML 校验级别
+ * 上下文
  */
-export type HtmlValidationLevel = false | 'warn' | 'strict'
-
-/**
- * HTML 校验结果
- */
-export interface HtmlValidationResult {
-  /** 是否通过校验 */
-  valid: boolean
-  /** 警告信息 */
-  warnings: string[]
-  /** 错误信息（仅在 strict 模式下有值） */
-  errors: string[]
+export interface ResolveHtmlContext {
+  entryPath?: string
 }
 
 /**
@@ -79,11 +69,14 @@ export interface ResolveHtmlOptions {
   defaultHtml?: HtmlConfig
   rootDir?: string
   replacements?: Record<string, string>
-  context?: Record<string, any>
+  context?: ResolveHtmlContext
   /** HTML 校验级别，默认 'warn' */
-  validateCustom?: HtmlValidationLevel
+  validateCustom?: import('./validation/types').HtmlValidationLevel
 }
 
+/**
+ * Zelpis 配置
+ */
 export interface ZElpisConfig {
   /**
    * 入口配置
@@ -99,5 +92,13 @@ export interface ZElpisConfig {
    * - 'warn': 只警告（默认）
    * - 'strict': 严格模式，有错误则抛出异常
    */
-  validateCustomHtml?: HtmlValidationLevel
+  validateCustomHtml?: import('./validation/types').HtmlValidationLevel
 }
+
+/**
+ * 验证类型
+ */
+export type {
+  HtmlValidationLevel,
+  HtmlValidationResult,
+} from './validation/types'

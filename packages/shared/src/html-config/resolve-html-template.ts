@@ -1,26 +1,34 @@
-// packages/shared/src/html-config/resolve-html-template.ts
-import type { HtmlConfig, HtmlValidationLevel, ResolveHtmlOptions } from './types'
+import type { HtmlConfig, HtmlValidationLevel, ResolveHtmlContext, ResolveHtmlOptions } from './types'
 import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
-import * as constants from './constants'
+import { dedent } from 'ts-dedent'
 import {
   appendHtml,
-  cleanAppInjectScript,
   findElement,
   findMetaByName,
-  formatValidationOutput,
-  getAttribute,
   getOrCreateElement,
   parseHtml,
   replaceBodyContent,
   serializeHtml,
   setAttribute,
   setTextContent,
-  smartMergePlaceholders,
-  STANDARD_PLACEHOLDERS,
-  validateHtmlTemplate,
-} from './utils'
+} from './dom'
+import { cleanAppInjectScript, smartMergePlaceholders, STANDARD_PLACEHOLDERS } from './injection'
+import { formatValidationOutput, validateHtmlTemplate } from './validation'
+
+// 默认模板
+const DEFAULT_HTML_TEMPLATE = dedent`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zelpis App</title>
+</head>
+<body>
+  <div id="app"></div>
+</body>
+</html>`
 
 /**
  * 解析 HTML 模板
@@ -79,8 +87,9 @@ function getBaseTemplate(config: HtmlConfig, rootDir: string): string {
   // 优先使用指定的 template 文件
   if (config.template) {
     const templatePath = path.resolve(rootDir, config.template)
-    if (fs.existsSync(templatePath)) {
-      return fs.readFileSync(templatePath, 'utf-8')
+    const content = tryReadTemplate(templatePath)
+    if (content) {
+      return content
     }
     else {
       // 文件不存在，发出警告并继续
@@ -92,11 +101,21 @@ function getBaseTemplate(config: HtmlConfig, rootDir: string): string {
   }
 
   const defaultPath = path.resolve(rootDir, 'index.html')
-  if (fs.existsSync(defaultPath)) {
-    return fs.readFileSync(defaultPath, 'utf-8')
+  const defaultContent = tryReadTemplate(defaultPath)
+
+  if (defaultContent) {
+    return defaultContent
   }
 
-  return constants.DEFAULT_HTML_TEMPLATE
+  return DEFAULT_HTML_TEMPLATE
+}
+
+// 文件读取逻辑
+function tryReadTemplate(filePath: string): string | null {
+  if (fs.existsSync(filePath)) {
+    return fs.readFileSync(filePath, 'utf-8')
+  }
+  return null
 }
 
 /**
@@ -129,7 +148,7 @@ function applyHtmlConfig(html: string, config: HtmlConfig): string {
  * 使用 DOM 应用 meta 配置
  */
 function applyMetaConfig(
-  document: any,
+  document: ReturnType<typeof parseHtml>,
   meta: NonNullable<HtmlConfig['meta']>,
 ): void {
   const { title, description, keywords, viewport, charset, lang } = meta
@@ -146,12 +165,7 @@ function applyMetaConfig(
   if (charset) {
     const head = findElement(document, 'head')
     if (head) {
-      const metas = head.childNodes.filter(
-        node => 'tagName' in node && node.tagName === 'meta',
-      )
-      const charsetMeta = metas.find(meta =>
-        getAttribute(meta as any, 'charset') !== null,
-      )
+      const charsetMeta = head.querySelector('meta[charset]')
 
       if (charsetMeta) {
         setAttribute(charsetMeta as any, 'charset', charset)
@@ -170,15 +184,16 @@ function applyMetaConfig(
   }
 
   // 设置其他 meta 标签
-  if (viewport) {
-    updateMetaTag(document, 'viewport', viewport)
-  }
-  if (description) {
-    updateMetaTag(document, 'description', description)
-  }
-  if (keywords) {
-    updateMetaTag(document, 'keywords', keywords)
-  }
+  const metaTags: Array<[string, string | undefined]> = [
+    ['viewport', viewport],
+    ['description', description],
+    ['keywords', keywords],
+  ]
+
+  metaTags.forEach(([name, content]) => {
+    if (content)
+      updateMetaTag(document, name, content)
+  })
 }
 
 /**
@@ -236,38 +251,76 @@ function applyBodyConfig(
 }
 
 /**
- * 确保 HTML 包含占位符
- * 这部分仍然保留字符串操作，因为占位符是注释节点，更适合字符串处理
+ * 确保 HTML 包含占位符并执行替换
  */
 function ensureHtmlPlaceholder(
   html: string,
   replacements: Record<string, string>,
-  context: Record<string, any>,
+  context: ResolveHtmlContext,
 ): string {
-  let result = html
   const placeholders = Object.keys(replacements)
 
-  // 第一步：清理模板中的默认内容
+  // 处理流程：清理 → 插入 → 去重 → 替换 → 清理多余空白
+  const pipeline = [
+    (h: string) => cleanDefaultContent(h, placeholders, context),
+    (h: string) => insertMissingPlaceholders(h, placeholders),
+    (h: string) => deduplicatePlaceholders(h, placeholders),
+    (h: string) => replacePlaceholders(h, replacements),
+    cleanupWhitespace,
+  ]
+
+  return pipeline.reduce((result, fn) => fn(result), html)
+}
+
+/**
+ * 步骤1：清理模板中的默认内容
+ */
+function cleanDefaultContent(
+  html: string,
+  placeholders: string[],
+  context: ResolveHtmlContext,
+): string {
+  let result = html
+
   for (const placeholder of placeholders) {
+    // 清理注入脚本
     if (placeholder === STANDARD_PLACEHOLDERS.APP_INJECT_SCRIPT) {
       result = cleanAppInjectScript(result, context)
     }
-    // 清理 <div id="app"></div>
+
+    // 清理默认的 app 容器
     if (placeholder === STANDARD_PLACEHOLDERS.APP_BODY_START) {
       result = result.replace(/<div\s+id=["']app["']>\s*<\/div>/gi, '')
     }
   }
 
-  // 第二步：确保占位符存在
+  return result
+}
+
+/**
+ * 步骤2：插入缺失的占位符
+ */
+function insertMissingPlaceholders(html: string, placeholders: string[]): string {
+  let result = html
+
   for (const placeholder of placeholders) {
     if (!result.includes(placeholder)) {
       result = insertPlaceholder(result, placeholder)
     }
   }
 
-  // 第三步：确保每个占位符只出现一次
+  return result
+}
+
+/**
+ * 步骤3：确保每个占位符只出现一次（保留第一个，删除后续的）
+ */
+function deduplicatePlaceholders(html: string, placeholders: string[]): string {
+  let result = html
+
   for (const placeholder of placeholders) {
     const firstIndex = result.indexOf(placeholder)
+
     if (firstIndex !== -1) {
       const before = result.substring(0, firstIndex + placeholder.length)
       const after = result.substring(firstIndex + placeholder.length)
@@ -275,49 +328,60 @@ function ensureHtmlPlaceholder(
     }
   }
 
-  // 第四步：执行替换
+  return result
+}
+
+/**
+ * 步骤4：执行占位符替换
+ */
+function replacePlaceholders(
+  html: string,
+  replacements: Record<string, string>,
+): string {
+  let result = html
+
   for (const [placeholder, replacement] of Object.entries(replacements)) {
+    // 智能合并脚本注入
     if (placeholder === STANDARD_PLACEHOLDERS.APP_INJECT_SCRIPT) {
       result = smartMergePlaceholders(replacement, result, placeholder)
     }
+    // 普通替换
     else {
       result = result.replace(placeholder, replacement)
     }
   }
 
-  // 第五步：清理空白
-  result = cleanupWhitespace(result)
-
   return result
 }
 
 /**
- * 插入占位符（简化版，只处理关键位置）
+ * 插入占位符到合适的位置
  */
 function insertPlaceholder(html: string, placeholder: string): string {
+  // body 开始位置
   if (placeholder.includes('app-body-start')) {
-    // 在 <body> 后插入
     return html.replace(/<body([^>]*)>/i, `$&\n  ${placeholder}`)
   }
 
+  // 脚本注入位置
   if (placeholder.includes('app-inject-script')) {
-    // 在 </body> 前插入
     return html.replace(/<\/body>/i, `  ${placeholder}\n</body>`)
   }
 
-  // 兜底：在 </body> 前插入
+  // 默认：在 </body> 前插入
   if (/<\/body>/i.test(html)) {
     return html.replace(/<\/body>/i, `  ${placeholder}\n</body>`)
   }
 
+  // 兜底：追加到末尾
   return `${html}\n${placeholder}`
 }
 
 /**
- * 清理空白
+ * 清理多余空白
  */
 function cleanupWhitespace(html: string): string {
   return html
-    .replace(/\n\s*\n\s*\n/g, '\n\n')
-    .replace(/[ \t]+$/gm, '')
+    .replace(/\n\s*\n\s*\n/g, '\n\n') // 多个空行 → 两个空行
+    .replace(/[ \t]+$/gm, '') // 移除行尾空白
 }
