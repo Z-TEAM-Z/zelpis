@@ -1,5 +1,7 @@
 import type { HTMLElement } from 'node-html-parser'
 import type { HTMLRoot } from './parser'
+import { findElement } from './element'
+import { parseHtml, serializeHtml } from './parser'
 
 /**
  * 设置元素的文本内容
@@ -61,29 +63,13 @@ export function findScripts(
 }
 
 /**
- * 获取 script 元素的文本内容
+ * 移除空的 app 容器
  */
-export function getScriptContent(script: HTMLElement): string {
-  return script.textContent
-}
-
-/**
- * 设置 script 元素的文本内容
- */
-export function setScriptContent(script: HTMLElement, content: string): void {
-  script.textContent = content
-}
-
-/**
- * 检查文本是否包含指定模式
- */
-export function containsPattern(text: string, pattern: string): boolean {
-  return text.includes(pattern)
-}
-
-/**
- * 检查 HTML 是否包含危险模式
- */
-export function containsDangerousPattern(html: string, pattern: RegExp): boolean {
-  return pattern.test(html)
+export function removeEmptyAppContainer(html: string): string {
+  const document = parseHtml(html)
+  const app = findElement(document, '#app')
+  if (app && app.childNodes.length === 0 && (app.textContent ?? '').trim() === '') {
+    app.remove()
+  }
+  return serializeHtml(document)
 }

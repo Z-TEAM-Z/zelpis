@@ -1,3 +1,5 @@
+import type { HtmlValidationLevel } from './validation/types'
+
 /**
  * HTML 配置
  */
@@ -71,7 +73,7 @@ export interface ResolveHtmlOptions {
   replacements?: Record<string, string>
   context?: ResolveHtmlContext
   /** HTML 校验级别，默认 'warn' */
-  validateCustom?: import('./validation/types').HtmlValidationLevel
+  validateLevel?: HtmlValidationLevel
 }
 
 /**
@@ -92,7 +94,7 @@ export interface ZElpisConfig {
    * - 'warn': 只警告（默认）
    * - 'strict': 严格模式，有错误则抛出异常
    */
-  validateCustomHtml?: import('./validation/types').HtmlValidationLevel
+  validateHtml?: HtmlValidationLevel
 }
 
 /**

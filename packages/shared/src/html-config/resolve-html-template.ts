@@ -9,6 +9,7 @@ import {
   findMetaByName,
   getOrCreateElement,
   parseHtml,
+  removeEmptyAppContainer,
   replaceBodyContent,
   serializeHtml,
   setAttribute,
@@ -40,7 +41,7 @@ export function resolveHtmlTemplate(options: ResolveHtmlOptions): string {
     rootDir = process.cwd(),
     replacements = {},
     context = {},
-    validateCustom = 'warn',
+    validateLevel = 'warn',
   } = options
   const htmlConfig = { ...defaultHtml, ...entry.html }
 
@@ -53,8 +54,8 @@ export function resolveHtmlTemplate(options: ResolveHtmlOptions): string {
   }
 
   // 如果启用校验（不是 false）
-  if (validateCustom !== false) {
-    validateCustomHtml(html, validateCustom)
+  if (validateLevel !== false) {
+    validateHtml(html, validateLevel)
   }
 
   return ensureHtmlPlaceholder(html, replacements, context)
@@ -63,15 +64,15 @@ export function resolveHtmlTemplate(options: ResolveHtmlOptions): string {
 /**
  * 校验 HTML 模板
  */
-function validateCustomHtml(html: string, validateCustom: HtmlValidationLevel): void {
+function validateHtml(html: string, validateLevel: HtmlValidationLevel): void {
   const validation = validateHtmlTemplate(html)
   // 输出校验结果
   if (validation.warnings.length > 0 || validation.errors.length > 0) {
-    formatValidationOutput(validation, validateCustom)
+    formatValidationOutput(validation, validateLevel)
   }
 
   // strict 模式下，如果校验失败则抛出错误
-  if (validateCustom === 'strict' && !validation.valid) {
+  if (validateLevel === 'strict' && !validation.valid) {
     throw new Error(
       `Custom HTML validation failed:\n${
         validation.errors.map(e => `  - ${e}`).join('\n')}`,
@@ -288,9 +289,9 @@ function cleanDefaultContent(
       result = cleanAppInjectScript(result, context)
     }
 
-    // 清理默认的 app 容器
+    // 清理空的 app 容器
     if (placeholder === STANDARD_PLACEHOLDERS.APP_BODY_START) {
-      result = result.replace(/<div\s+id=["']app["']>\s*<\/div>/gi, '')
+      result = removeEmptyAppContainer(result)
     }
   }
 
@@ -360,12 +361,18 @@ function replacePlaceholders(
 function insertPlaceholder(html: string, placeholder: string): string {
   // body 开始位置
   if (placeholder.includes('app-body-start')) {
-    return html.replace(/<body([^>]*)>/i, `$&\n  ${placeholder}`)
+    const replaced = html.replace(/<body([^>]*)>/i, `$&\n  ${placeholder}`)
+    if (replaced !== html) {
+      return replaced
+    }
   }
 
   // 脚本注入位置
   if (placeholder.includes('app-inject-script')) {
-    return html.replace(/<\/body>/i, `  ${placeholder}\n</body>`)
+    const replaced = html.replace(/<\/body>/i, `  ${placeholder}\n</body>`)
+    if (replaced !== html) {
+      return replaced
+    }
   }
 
   // 默认：在 </body> 前插入

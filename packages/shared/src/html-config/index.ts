@@ -13,4 +13,5 @@ export type {
   HtmlValidationLevel,
   HtmlValidationResult,
   ResolveHtmlOptions,
+  ZElpisConfig,
 } from './types'

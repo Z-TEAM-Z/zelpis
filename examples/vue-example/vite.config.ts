@@ -23,6 +23,6 @@ export default defineConfig({
         // },
       },
     ],
-    validateCustomHtml: 'warn',
+    validateHtml: 'warn',
   },
 })
