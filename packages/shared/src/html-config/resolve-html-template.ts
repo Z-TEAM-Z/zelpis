@@ -4,7 +4,7 @@ import path from 'node:path'
 import process from 'node:process'
 import { dedent } from 'ts-dedent'
 import {
-  appendHtml,
+  appendMeta,
   findElement,
   findMetaByName,
   getOrCreateElement,
@@ -131,10 +131,10 @@ function applyHtmlConfig(html: string, config: HtmlConfig): string {
     applyMetaConfig(document, config.meta)
   }
 
-  // 应用 head 内容
-  if (config.head && config.head.length > 0) {
-    applyHeadContent(document, config.head)
-  }
+  // 应用 head 内容,避免注入任意 HTML，先不开放
+  // if (config.head && config.head.length > 0) {
+  //   applyHeadContent(document, config.head)
+  // }
 
   // 应用 body 配置
   if (config.body) {
@@ -169,11 +169,11 @@ function applyMetaConfig(
       const charsetMeta = head.querySelector('meta[charset]')
 
       if (charsetMeta) {
-        setAttribute(charsetMeta as any, 'charset', charset)
+        setAttribute(charsetMeta, 'charset', charset)
       }
       else {
         // 创建新的 charset meta
-        appendHtml(head, `<meta charset="${charset}" />`)
+        appendMeta(head, { charset })
       }
     }
   }
@@ -209,23 +209,23 @@ function updateMetaTag(document: any, name: string, content: string): void {
   else {
     const head = findElement(document, 'head')
     if (head) {
-      appendHtml(head, `<meta name="${name}" content="${content}" />`)
+      appendMeta(head, { name, content })
     }
   }
 }
 
 /**
- * 使用 DOM 应用 head 内容
+ * 使用 DOM 应用 head 内容,避免注入任意 HTML，先不开放
  */
-function applyHeadContent(document: any, headContent: string[]): void {
-  const head = findElement(document, 'head')
-  if (!head)
-    return
+// function applyHeadContent(document: any, headContent: string[]): void {
+//   const head = findElement(document, 'head')
+//   if (!head)
+//     return
 
-  for (const content of headContent) {
-    appendHtml(head, content)
-  }
-}
+//   for (const content of headContent) {
+//     appendHtml(head, content)
+//   }
+// }
 
 /**
  * 使用 DOM 应用 body 配置
