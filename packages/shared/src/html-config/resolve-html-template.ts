@@ -88,7 +88,7 @@ function validateHtml(html: string, validateLevel: HtmlValidationLevel, root: HT
   // strict 模式下，如果校验失败则抛出错误
   if (validateLevel === 'strict' && !validation.valid) {
     throw new Error(
-      `Custom HTML validation failed:\n${
+      `HTML template validation failed:\n${
         validation.errors.map(e => `  - ${e}`).join('\n')}`,
     )
   }
