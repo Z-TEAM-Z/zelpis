@@ -28,7 +28,7 @@ export function getTextContent(element: HTMLElement): string {
 
 /**
  * 追加 HTML 内容到元素
- * ⚠️ 仅在 html 完全可信时使用
+ * @warning 仅在 html 完全可信时使用
  */
 export function appendHtml(element: HTMLElement, html: string): void {
   element.innerHTML += html
@@ -79,7 +79,7 @@ export function replaceBodyContent(root: HTMLRoot, content: string): void {
   if (!body) {
     throw new Error('Body element not found')
   }
-  const safeContent = sanitizeBodyContent(content)
+  const safeContent = sanitizeBodyContent(content, false)
   body.innerHTML = safeContent
 }
 
@@ -95,7 +95,7 @@ export function findScripts(
 }
 
 /**
- * 移除空的 app 容器
+ * 移除空的 app 容器，仅支持字符串
  */
 export function removeEmptyAppContainer(html: string): string {
   const document = parseHtml(html)
@@ -107,9 +107,24 @@ export function removeEmptyAppContainer(html: string): string {
 }
 
 /**
+ * 移除空的 app 容器，支持 DOM 操作
+ * @param root
+ */
+export function removeEmptyAppContainerDom(root: HTMLRoot): void {
+  const app = findElement(root, '#app')
+  if (app && app.childNodes.length === 0 && (app.textContent ?? '').trim() === '') {
+    app.remove()
+  }
+}
+
+/**
  * 处理 body 内容，仅允许 id、class、style、data-* 或其它必要属性，任何 on* 事件、javascript: 协议、srcdoc 等直接移除
  */
-function sanitizeBodyContent(content: string): string {
+function sanitizeBodyContent(content: string, isOpen: boolean): string {
+  if (!isOpen) {
+    return content
+  }
+
   const ALLOWED_TAGS = new Set(['div', 'main', 'section', 'article', 'header', 'footer', 'p', 'span'])
   const ALLOWED_ATTRS = new Set(['id', 'class', 'style', 'data-*'])
   const fragment = parse(`<wrapper>${content}</wrapper>`)

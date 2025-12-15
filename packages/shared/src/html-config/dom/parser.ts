@@ -6,7 +6,13 @@ export type HTMLRoot = ReturnType<typeof parse>
  * 解析 HTML
  */
 export function parseHtml(html: string): HTMLRoot {
-  return parse(html)
+  return parse(html, {
+    comment: true,
+    blockTextElements: {
+      script: true,
+      style: true,
+    },
+  })
 }
 
 /**

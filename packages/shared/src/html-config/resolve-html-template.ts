@@ -1,4 +1,5 @@
-import type { HtmlConfig, HtmlValidationLevel, ResolveHtmlContext, ResolveHtmlOptions } from './types'
+import type { HTMLRoot } from './dom'
+import type { HtmlConfig, HtmlValidationLevel, ResolveHtmlOptions } from './types'
 import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
@@ -9,13 +10,13 @@ import {
   findMetaByName,
   getOrCreateElement,
   parseHtml,
-  removeEmptyAppContainer,
+  removeEmptyAppContainerDom,
   replaceBodyContent,
   serializeHtml,
   setAttribute,
   setTextContent,
 } from './dom'
-import { cleanAppInjectScript, smartMergePlaceholders, STANDARD_PLACEHOLDERS } from './injection'
+import { cleanAppInjectScriptDom, smartMergePlaceholders, STANDARD_PLACEHOLDERS } from './injection'
 import { formatValidationOutput, validateHtmlTemplate } from './validation'
 
 // 默认模板
@@ -46,26 +47,39 @@ export function resolveHtmlTemplate(options: ResolveHtmlOptions): string {
   const htmlConfig = { ...defaultHtml, ...entry.html }
 
   // 获取基础模板
-  let html = htmlConfig.custom || getBaseTemplate(htmlConfig, rootDir)
+  const html = htmlConfig.custom || getBaseTemplate(htmlConfig, rootDir)
+  const document = parseHtml(html)
 
   // 应用配置增强（custom 完全覆盖其他配置）
   if (!htmlConfig.custom && (htmlConfig.meta || htmlConfig.head || htmlConfig.body)) {
-    html = applyHtmlConfig(html, htmlConfig)
+    applyHtmlConfig(document, htmlConfig)
   }
+
+  const placeholders = Object.keys(replacements)
+
+  // DOM 清理：根据占位符需求去除默认注入脚本和空容器
+  if (placeholders.includes(STANDARD_PLACEHOLDERS.APP_INJECT_SCRIPT)) {
+    cleanAppInjectScriptDom(document, context)
+  }
+  if (placeholders.includes(STANDARD_PLACEHOLDERS.APP_BODY_START)) {
+    removeEmptyAppContainerDom(document)
+  }
+
+  const htmlAfterDom = serializeHtml(document)
 
   // 如果启用校验（不是 false）
   if (validateLevel !== false) {
-    validateHtml(html, validateLevel)
+    validateHtml(htmlAfterDom, validateLevel, document)
   }
 
-  return ensureHtmlPlaceholder(html, replacements, context)
+  return ensureHtmlPlaceholder(htmlAfterDom, replacements)
 }
 
 /**
  * 校验 HTML 模板
  */
-function validateHtml(html: string, validateLevel: HtmlValidationLevel): void {
-  const validation = validateHtmlTemplate(html)
+function validateHtml(html: string, validateLevel: HtmlValidationLevel, root: HTMLRoot): void {
+  const validation = validateHtmlTemplate(html, root)
   // 输出校验结果
   if (validation.warnings.length > 0 || validation.errors.length > 0) {
     formatValidationOutput(validation, validateLevel)
@@ -122,10 +136,7 @@ function tryReadTemplate(filePath: string): string | null {
 /**
  * 使用 DOM 操作应用 HTML 配置
  */
-function applyHtmlConfig(html: string, config: HtmlConfig): string {
-  // 解析为 DOM
-  const document = parseHtml(html)
-
+function applyHtmlConfig(document: HTMLRoot, config: HtmlConfig): void {
   // 应用 meta 配置
   if (config.meta) {
     applyMetaConfig(document, config.meta)
@@ -140,16 +151,13 @@ function applyHtmlConfig(html: string, config: HtmlConfig): string {
   if (config.body) {
     applyBodyConfig(document, config.body)
   }
-
-  // 序列化回 HTML
-  return serializeHtml(document)
 }
 
 /**
  * 使用 DOM 应用 meta 配置
  */
 function applyMetaConfig(
-  document: ReturnType<typeof parseHtml>,
+  document: HTMLRoot,
   meta: NonNullable<HtmlConfig['meta']>,
 ): void {
   const { title, description, keywords, viewport, charset, lang } = meta
@@ -231,7 +239,7 @@ function updateMetaTag(document: any, name: string, content: string): void {
  * 使用 DOM 应用 body 配置
  */
 function applyBodyConfig(
-  document: any,
+  document: HTMLRoot,
   bodyConfig: NonNullable<HtmlConfig['body']>,
 ): void {
   const body = findElement(document, 'body')
@@ -257,13 +265,11 @@ function applyBodyConfig(
 function ensureHtmlPlaceholder(
   html: string,
   replacements: Record<string, string>,
-  context: ResolveHtmlContext,
 ): string {
   const placeholders = Object.keys(replacements)
 
-  // 处理流程：清理 → 插入 → 去重 → 替换 → 清理多余空白
+  // 处理流程：插入 → 去重 → 替换 → 清理多余空白
   const pipeline = [
-    (h: string) => cleanDefaultContent(h, placeholders, context),
     (h: string) => insertMissingPlaceholders(h, placeholders),
     (h: string) => deduplicatePlaceholders(h, placeholders),
     (h: string) => replacePlaceholders(h, replacements),
@@ -274,32 +280,7 @@ function ensureHtmlPlaceholder(
 }
 
 /**
- * 步骤1：清理模板中的默认内容
- */
-function cleanDefaultContent(
-  html: string,
-  placeholders: string[],
-  context: ResolveHtmlContext,
-): string {
-  let result = html
-
-  for (const placeholder of placeholders) {
-    // 清理注入脚本
-    if (placeholder === STANDARD_PLACEHOLDERS.APP_INJECT_SCRIPT) {
-      result = cleanAppInjectScript(result, context)
-    }
-
-    // 清理空的 app 容器
-    if (placeholder === STANDARD_PLACEHOLDERS.APP_BODY_START) {
-      result = removeEmptyAppContainer(result)
-    }
-  }
-
-  return result
-}
-
-/**
- * 步骤2：插入缺失的占位符
+ * 步骤1：插入缺失的占位符
  */
 function insertMissingPlaceholders(html: string, placeholders: string[]): string {
   let result = html
@@ -314,7 +295,7 @@ function insertMissingPlaceholders(html: string, placeholders: string[]): string
 }
 
 /**
- * 步骤3：确保每个占位符只出现一次（保留第一个，删除后续的）
+ * 步骤2：确保每个占位符只出现一次（保留第一个，删除后续的）
  */
 function deduplicatePlaceholders(html: string, placeholders: string[]): string {
   let result = html
@@ -333,7 +314,7 @@ function deduplicatePlaceholders(html: string, placeholders: string[]): string {
 }
 
 /**
- * 步骤4：执行占位符替换
+ * 步骤3：执行占位符替换
  */
 function replacePlaceholders(
   html: string,

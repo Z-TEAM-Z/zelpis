@@ -12,7 +12,7 @@ interface ValidationIssues {
 /**
  * 验证 HTML 模板
  */
-export function validateHtmlTemplate(html: string): HtmlValidationResult {
+export function validateHtmlTemplate(html: string, preParsed?: HTMLRoot): HtmlValidationResult {
   const issues: ValidationIssues = { warnings: [], errors: [] }
 
   // 基本验证
@@ -21,8 +21,8 @@ export function validateHtmlTemplate(html: string): HtmlValidationResult {
     return buildResult(issues)
   }
 
-  // 解析验证
-  const root = tryParseHtml(html, issues)
+  // 解析验证（可复用已有 DOM，避免重复 parse）
+  const root = preParsed ?? tryParseHtml(html, issues)
   if (!root)
     return buildResult(issues)
 
