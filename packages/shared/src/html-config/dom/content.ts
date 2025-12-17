@@ -120,8 +120,8 @@ export function removeEmptyAppContainerDom(root: HTMLRoot): void {
 /**
  * 处理 body 内容，仅允许 id、class、style、data-* 或其它必要属性，任何 on* 事件、javascript: 协议、srcdoc 等直接移除
  */
-function sanitizeBodyContent(content: string, isOpen: boolean): string {
-  if (!isOpen) {
+function sanitizeBodyContent(content: string, enableXssSanitization: boolean): string {
+  if (!enableXssSanitization) {
     return content
   }
 
