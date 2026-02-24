@@ -94,7 +94,7 @@ export interface ZElpisConfig {
    * - 'warn': 只警告（默认）
    * - 'strict': 严格模式，有错误则抛出异常
    */
-  validateHtml?: HtmlValidationLevel
+  validateLevel?: HtmlValidationLevel
 }
 
 /**

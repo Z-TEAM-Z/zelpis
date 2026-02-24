@@ -140,7 +140,7 @@ export async function buildPlugin(_option?: BuilderPluginOption): Promise<Plugin
             context: {
               entryPath: item.entryPath, // 传入 entryPath 用于精准匹配
             },
-            validateLevel: zelpisConfig.validateHtml,
+            validateLevel: zelpisConfig.validateLevel,
           })
 
           fs.writeFileSync(entry, html)

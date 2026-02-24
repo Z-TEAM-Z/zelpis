@@ -18,11 +18,11 @@ export default defineConfig({
         entryPath: path.resolve(__dirname, './entry.ts'),
         basePath: '/',
         dslPath: path.resolve(__dirname, './model'),
-        // html: {
-        //   custom: '<div>123',
-        // },
+        html: {
+          custom: '<div>123',
+        },
       },
     ],
-    validateHtml: 'warn',
+    validateLevel: 'warn',
   },
 })

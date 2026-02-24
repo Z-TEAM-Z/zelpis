@@ -194,7 +194,7 @@ export function renderPlugin(option: RenderPluginOption): Plugin {
               context: {
                 entryPath: relativeEntryPath, // 传入 entryPath 用于精准匹配
               },
-              validateLevel: zelpisConfig.validateHtml ?? 'warn',
+              validateLevel: zelpisConfig.validateLevel ?? 'warn',
             })
 
             const template = await server.transformIndexHtml(url, htmlTemplate, req.originalUrl)

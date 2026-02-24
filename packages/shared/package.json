@@ -28,7 +28,8 @@
   },
   "dependencies": {
     "node-html-parser": "catalog:dev",
-    "parse5": "catalog:dev"
+    "parse5": "catalog:dev",
+    "ts-dedent": "catalog:dev"
   },
   "devDependencies": {
     "@types/parse5": "catalog:types",

@@ -33,8 +33,7 @@
     "@zelpis/render": "workspace:*",
     "@zelpis/shared": "workspace:*",
     "fast-glob": "catalog:dev",
-    "pkg-types": "catalog:dev",
-    "ts-dedent": "catalog:dev"
+    "pkg-types": "catalog:dev"
   },
   "devDependencies": {
     "tsdown": "catalog:dev"
