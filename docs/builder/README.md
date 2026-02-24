@@ -389,7 +389,7 @@ Zelpis 提供了内置的 HTML 合法性校验功能，帮助你在使用 `html.
 - ⚠️ 是否包含 `<title>` 标签
 
 **安全性检查（警告级别）：**
-- ⚠️ 检测潜在不安全的 `javascript:void` 模式
+- ⚠️ 检测 `javascript:` URI 模式
 - ⚠️ 检测 `eval()` 调用
 
 ### 使用示例
@@ -405,7 +405,7 @@ export default defineConfig({
         entryPath: './entry.ts',
         dslPath: './model',
         html: {
-          custom: '<div>Invalid HTML without proper structure',
+          custom: '<div id="app" ',
         },
       },
     ],
@@ -461,6 +461,8 @@ Error: Custom HTML validation failed:
 ```
 
 构建会**立即失败**，必须修复所有错误才能继续。
+
+> 说明：此示例只显示 `Missing <html> tag`，是因为校验器在缺少 `<html>` 时会提前结束结构检查，`<head>` / `<body>` 属于依赖 `<html>` 的后续检查项。`strict` 模式本身只是将收集到的错误作为异常抛出。
 
 #### 关闭校验
 

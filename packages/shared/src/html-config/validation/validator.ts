@@ -122,7 +122,8 @@ function validateMetaTags(headNode: HTMLElement | null, issues: ValidationIssues
  * 验证安全性
  */
 function validateSecurity(html: string, issues: ValidationIssues): void {
-  if (/javascript:\s*void/i.test(html)) {
+  // 覆盖所有 javascript: URI（不限于 javascript:void）
+  if (/javascript\s*:/i.test(html)) {
     issues.warnings.push(VALIDATION_MESSAGES.UNSAFE_JAVASCRIPT)
   }
 
