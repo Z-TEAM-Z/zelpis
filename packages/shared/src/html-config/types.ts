@@ -1,3 +1,5 @@
+import type { HtmlValidationLevel } from './validation/types'
+
 /**
  * HTML 配置
  */
@@ -55,15 +57,28 @@ export interface Entry {
 }
 
 /**
+ * 上下文
+ */
+export interface ResolveHtmlContext {
+  entryPath?: string
+}
+
+/**
  * 解析 HTML 选项
  */
 export interface ResolveHtmlOptions {
   entry: Entry
   defaultHtml?: HtmlConfig
   rootDir?: string
-  ensurePlaceholders?: string[]
+  replacements?: Record<string, string>
+  context?: ResolveHtmlContext
+  /** HTML 校验级别，默认 'warn' */
+  validateLevel?: HtmlValidationLevel
 }
 
+/**
+ * Zelpis 配置
+ */
 export interface ZElpisConfig {
   /**
    * 入口配置
@@ -73,10 +88,19 @@ export interface ZElpisConfig {
    * 默认 HTML 配置
    */
   defaultHtml?: HtmlConfig
+  /**
+   * HTML 校验级别
+   * - false: 不校验
+   * - 'warn': 只警告（默认）
+   * - 'strict': 严格模式，有错误则抛出异常
+   */
+  validateLevel?: HtmlValidationLevel
 }
 
-export interface PlaceholderRule {
-  target: RegExp
-  position: 'before' | 'after'
-  func: (html: string, placeholder: string, rule: PlaceholderRule) => string
-}
+/**
+ * 验证类型
+ */
+export type {
+  HtmlValidationLevel,
+  HtmlValidationResult,
+} from './validation/types'

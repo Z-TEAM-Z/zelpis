@@ -20,6 +20,8 @@ catalogs:
     fast-glob: ^3.3.3
     jiti: ^2.6.1
     lint-staged: ^15.5.2
+    node-html-parser: ^6.1.13
+    parse5: ^8.0.0
     pkg-types: ^2.3.0
     simple-git-hooks: ^2.13.1
     taze: ^19.6.0
@@ -52,6 +54,7 @@ catalogs:
 
   types:
     '@types/node': ^22.18.6
+    '@types/parse5': ^7.0.0
     '@types/react': ^19.1.13
     '@types/react-dom': ^19.1.9
     '@vue/tsconfig': ^0.8.1

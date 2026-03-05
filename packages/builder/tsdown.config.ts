@@ -5,5 +5,5 @@ export default createTsdownConfig({
     'index': './src/index.ts',
     'plugins/index': './src/plugins/index.ts',
   },
-  external: ['fast-glob', 'pkg-types', 'ts-dedent'],
+  external: ['fast-glob', 'pkg-types'],
 })

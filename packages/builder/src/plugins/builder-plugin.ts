@@ -3,10 +3,9 @@ import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
 import { loadDsl } from '@zelpis/render/dsl/server'
-import { resolveHtmlTemplate, STANDARD_PLACEHOLDERS } from '@zelpis/shared/html-config'
+import { getInjectScript, resolveHtmlTemplate, STANDARD_PLACEHOLDERS } from '@zelpis/shared/html-config'
 import glob from 'fast-glob'
 import { resolvePackageJSON } from 'pkg-types'
-import { dedent } from 'ts-dedent'
 
 const PLUGIN_NAME = 'zelpis-builder-plugin'
 // 占位符
@@ -14,15 +13,6 @@ const APP_BODY_START_PLACEHOLDER = STANDARD_PLACEHOLDERS.APP_BODY_START
 const APP_INJECT_SCRIPT_PLACEHOLDER = STANDARD_PLACEHOLDERS.APP_INJECT_SCRIPT
 
 export interface BuilderPluginOption {}
-
-function getInjectScript(entryPath: string, { props }: any): string {
-  return dedent`
-    <script type="module" defer src="${entryPath}"></script>
-    <script>
-      window.$zelpis = {hydrateData:${JSON.stringify(props)}};
-    </script>
-  `
-}
 
 interface DslEntry {
   name: string
@@ -138,20 +128,22 @@ export async function buildPlugin(_option?: BuilderPluginOption): Promise<Plugin
             createdDirs.add(entryDir)
           }
 
-          // 解析 HTML 模板
-          const htmlTemplate = resolveHtmlTemplate({
+          // 解析并生成最终 HTML
+          const html = resolveHtmlTemplate({
             entry: item,
             defaultHtml: zelpisConfig.defaultHtml,
             rootDir: process.cwd(),
-            ensurePlaceholders: [APP_BODY_START_PLACEHOLDER, APP_INJECT_SCRIPT_PLACEHOLDER],
+            replacements: {
+              [APP_BODY_START_PLACEHOLDER]: '<div id="app"></div>',
+              [APP_INJECT_SCRIPT_PLACEHOLDER]: getInjectScript(item.entryPath, { props: { dsl: content } }),
+            },
+            context: {
+              entryPath: item.entryPath, // 传入 entryPath 用于精准匹配
+            },
+            validateLevel: zelpisConfig.validateLevel,
           })
 
-          fs.writeFileSync(
-            entry,
-            htmlTemplate
-              .replace(APP_BODY_START_PLACEHOLDER, '<div id="app"></div>')
-              .replace(APP_INJECT_SCRIPT_PLACEHOLDER, getInjectScript(item.entryPath, { props: { dsl: content } })),
-          )
+          fs.writeFileSync(entry, html)
 
           input[`${name ? `${name}/` : ''}${dslName}`] = entry
         })
