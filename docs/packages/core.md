@@ -1,126 +1,70 @@
 # @zelpis/core
 
-`@zelpis/core` 是 Zelpis 框架的核心包，整合了所有模块，提供统一的 API 入口。
+面向使用方的聚合包：在单一依赖下提供启动 API、Vite 插件组合入口，以及 DSL / Builder 的子路径再导出。
 
 ## 安装
 
 ```bash
 pnpm add @zelpis/core
 ```
+源码对应：`packages/core/src/index.ts`、`plugins.ts`、`dsl.ts`、`builder.ts`。
 
-## 核心功能
+## 典型用法
 
-### 1. 应用启动
+### 应用启动与 DSL
 
 ```typescript
-import { boot } from '@zelpis/core'
+import { boot, defineDsl } from '@zelpis/core'
+
+export const pageDsl = defineDsl({ title: 'Home', data: { n: 1 } })
 
 export default boot({
   framework: 'react',
   Component: App,
-  type: 'csr'
 })
 ```
 
-### 2. DSL 定义
+`boot` 由 `@zelpis/render` 提供：浏览器侧以 CSR 为主；`type` 非 CSR 时会告警并仍按 CSR 处理（详见 [@zelpis/render](/packages/render)）。
+
+### Vite：注册插件（与仓库示例一致）
+
+`buildPlugin` 返回 `Promise<Plugin>`；在 Vite 的 `plugins` 数组中可直接放入该 Promise（由 Vite 解析），也可在 `defineConfig(async () => ({ ... }))` 里 `await` 后再组装。
 
 ```typescript
-import { defineDsl } from '@zelpis/core'
-
-const dsl = defineDsl({
-  pages: [],
-  global_config: {}
-})
-```
-
-### 3. 插件系统
-
-```typescript
+import react from '@vitejs/plugin-react'
 import { buildPlugin, renderPlugin } from '@zelpis/core/plugins'
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  plugins: [
+    react(),
+    buildPlugin(),
+    renderPlugin({ baseDir: './' }),
+  ],
+  zelpis: {
+    entrys: [
+      { basePath: '/', entryPath: './entry.ts', dslPath: './model' },
+    ],
+  },
+})
 ```
 
-## 模块导出
-
-### 主入口
+### `zelpisPlugin`
 
 ```typescript
-// @zelpis/core
-export { boot } from '@zelpis/render'
-export { defineDsl } from '@zelpis/render/dsl'
+import { zelpisPlugin } from '@zelpis/core/plugins'
+
+// 等价于 [ buildPlugin(build), renderPlugin(render) ]
+plugins: [...zelpisPlugin({ build: {}, render: { baseDir: './' } })]
 ```
 
-### 子模块
-
-| 模块路径 | 导出内容 |
-|----------|----------|
-| `@zelpis/core/builder` | 构建相关 API |
-| `@zelpis/core/dsl` | DSL 工具函数 |
-| `@zelpis/core/plugins` | 插件系统 |
-
-## API 参考
-
-### boot(options)
-
-启动应用，支持 React 和 Vue 框架。
-
-### defineDsl(obj)
-
-定义和验证 DSL 配置。
-
-### 插件
-
-- `buildPlugin()` - 构建插件
-- `renderPlugin(options)` - 渲染插件
-
-## 使用示例
-
-### React 应用
+### DSL 工具
 
 ```typescript
-import { boot, defineDsl } from '@zelpis/core'
-import App from './App'
-
-const dsl = defineDsl({
-  pages: [
-    { id: 'home', url: '/', title: 'Home' }
-  ]
-})
-
-export default boot({
-  framework: 'react',
-  Component: App,
-  type: 'csr'
-})
+import { defineDsl, mergeDsl } from '@zelpis/core/dsl'
 ```
-
-### Vue 应用
-
-```typescript
-import { boot, defineDsl } from '@zelpis/core'
-import App from './App.vue'
-
-const dsl = defineDsl({
-  pages: [
-    { id: 'home', url: '/', title: 'Home' }
-  ]
-})
-
-export default boot({
-  framework: 'vue',
-  Component: App as any,
-  type: 'csr'
-})
-```
-
-## 依赖关系
-
-```
-@zelpis/core
-    ├── @zelpis/builder
-    ├── @zelpis/render
-    └── @zelpis/shared
-```
-
 ## 相关链接
 
-- [@zelpis/render](/packages/render) - 渲染引擎
+- [@zelpis/render](/packages/render)
+- [@zelpis/builder](/packages/builder)
+- [@zelpis/shared](/packages/shared)

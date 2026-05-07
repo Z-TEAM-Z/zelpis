@@ -1,51 +1,36 @@
-# 核心包文档
+# 包文档概览
 
-Zelpis 采用 monorepo 结构，包含多个核心包，每个包负责特定的功能。
+Zelpis 以 monorepo 管理多个 npm 包：`@zelpis/core` 聚合对外入口，其余包按职责拆分，便于单独版本与依赖管理。
 
-## 包结构
+## 包一览
 
-```
-packages/
-├── core/          # 核心包，整合所有模块
-├── builder/       # 构建相关功能
-├── render/        # 渲染引擎，支持 React 和 Vue
-├── shared/        # 共享工具和配置
-└── template/      # 模板系统
-```
+[@zelpis/core](/packages/core) | 聚合 `@zelpis/render`、`@zelpis/builder` 能力；提供 `@zelpis/core/plugins`、`@zelpis/core/dsl`、`@zelpis/core/builder` 子路径 ｜
 
-## 包概述
+[@zelpis/render](/packages/render) | 运行时启动（`boot`）、DSL 定义与合并、Vite 渲染插件、Node 侧 `loadDsl` |
 
-| 包名 | 描述 | 主要功能 |
-|------|------|----------|
-| `@zelpis/core` | 核心包 | 整合所有模块，提供统一 API |
-| `@zelpis/builder` | 构建工具 | Vite 插件，处理构建流程 |
-| `@zelpis/render` | 渲染引擎 | 支持 CSR 和 SSR，支持 React/Vue |
-| `@zelpis/shared` | 共享工具 | 通用工具函数和配置 |
-| `@zelpis/template` | 模板系统 | 预设模板和组件 |
+[@zelpis/builder](/packages/builder) | 构建期 Vite 插件：扫描 DSL、生成多 HTML 入口 |
 
-## 模块依赖关系
+[@zelpis/shared](/packages/shared) | 通用工具（`once`）与 HTML 模板解析、注入、校验（`@zelpis/shared/html-config`） |
 
-```
+## 依赖关系
+
+```text
 @zelpis/core
-    ├── @zelpis/builder
-    ├── @zelpis/render
-    └── @zelpis/shared
+  ├── @zelpis/builder
+  ├── @zelpis/render
+  └── @zelpis/shared
 
 @zelpis/builder
-    ├── @zelpis/render
-    └── @zelpis/shared
+  ├── @zelpis/render  （构建时调用 dsl/server）
+  └── @zelpis/shared
 
 @zelpis/render
-    └── @zelpis/shared
-
-@zelpis/template
-    └── @zelpis/core
+  └── @zelpis/shared
 ```
 
-## 快速导航
+## 文档索引
 
-- [@zelpis/core](/packages/core) - 核心包
-- [@zelpis/builder](/packages/builder) - 构建工具
-- [@zelpis/render](/packages/render) - 渲染引擎
-- [@zelpis/shared](/packages/shared) - 共享工具
-- [@zelpis/template](/packages/template) - 模板系统
+- [@zelpis/core](/packages/core)
+- [@zelpis/render](/packages/render)
+- [@zelpis/builder](/packages/builder)
+- [@zelpis/shared](/packages/shared)

@@ -12,7 +12,7 @@ ZElpis 是一个基于 DSL（领域特定语言）驱动的前端渲染框架，
 - **框架无关**：支持 React 和 Vue 两种前端框架
 - **模块化设计**：清晰的包结构，职责分明
 - **插件机制**：提供构建和渲染插件，增强扩展性
-- **支持 SSR/CSR**：支持客户端渲染，实验性支持服务器端渲染
+- **CSR 为主**：客户端渲染已支持；SSR 相关能力仍在演进，浏览器侧入口会以 CSR 方式运行
 - **HTML 自定义**：灵活的 HTML 配置和校验功能
 
 ## 许可证
@@ -21,33 +21,26 @@ MIT
 
 ## 安装
 
-### 全局安装
-
-```bash
-pnpm add zelpis
-```
-
-### 安装核心包
+在项目依赖中安装核心包（包名为作用域包 `@zelpis/core`）：
 
 ```bash
 pnpm add @zelpis/core
-pnpm add @zelpis/builder
-pnpm add @zelpis/render
-pnpm add @zelpis/shared
 ```
 
 ## 快速开始
 
 ### 1. 配置 Vite
 
-在 `vite.config.ts` 中配置 Zelpis：
+在 `vite.config.ts` 中配置 Zelpis。React 项目需同时使用 `@vitejs/plugin-react`（Vue 项目请使用 `@vitejs/plugin-vue`），否则无法编译 JSX / SFC：
 
 ```typescript
+import react from '@vitejs/plugin-react'
 import { buildPlugin, renderPlugin } from '@zelpis/core/plugins'
 import { defineConfig } from 'vite'
 
 export default defineConfig({
   plugins: [
+    react(),
     buildPlugin(),
     renderPlugin({ baseDir: './' }),
   ],
@@ -63,7 +56,7 @@ export default defineConfig({
 })
 ```
 
-### 2. 创建 DSL 模型
+### 2. 创建 DSL 模型 (各个模版约束不同，这里仅作为参考例子)
 
 在 `model` 目录下创建 DSL 文件：
 
@@ -95,9 +88,10 @@ import App from './App'
 boot({
   framework: 'react', // 或 'vue'
   Component: App,
-  type: 'csr' // 或 'ssr'
 })
 ```
+
+入口里可传入 `type?: 'csr' | 'ssr'`。在常见浏览器开发/构建产物中，非 CSR 会收到控制台提示并仍按 CSR 处理；SSR 场景请结合构建与服务端集成查阅示例与文档。
 
 ### 4. 创建应用组件
 
@@ -146,7 +140,7 @@ defineProps<{
 
 ### @zelpis/render
 
-处理 React 和 Vue 的渲染逻辑，支持客户端渲染和服务器端渲染。
+处理 React 和 Vue 的渲染逻辑；以 CSR 为主，SSR 相关逻辑仍在演进。
 
 ### @zelpis/builder
 
@@ -158,50 +152,16 @@ defineProps<{
 
 ## DSL 系统
 
-ZElpis 的 DSL 系统允许你通过简单的对象定义来描述页面结构和配置。
+ZElpis 的 DSL 通过 `defineDsl` 描述页面或模块配置。核心包里的 `DSL` 类型当前为可扩展的空接口，你可以在业务侧约定字段（例如 `title`、`route`、`data` 等），或与内部模块生成的类型对齐。
 
-### DSL 接口定义
-
-```typescript
-interface DSL {
-  title?: string           // 页面标题
-  description?: string     // 页面描述
-  keywords?: string        // 页面关键词
-  route?: string           // 页面路由
-  component?: string       // 页面组件
-  data?: Record<string, any> // 页面数据
-  config?: Record<string, any> // 页面配置
-  dependencies?: string[]  // 页面依赖
-  meta?: Record<string, any> // 页面元数据
-}
-```
-
-### DSL 验证
-
-ZElpis 提供了 DSL 验证功能，确保 DSL 对象的有效性：
+### 约定字段（示例）
 
 ```typescript
-import { validateDsl } from '@zelpis/core'
+import { defineDsl } from '@zelpis/core'
 
-const dsl = {
-  title: 'Home Page',
-  data: 'invalid data' // 类型错误
-}
-
-const result = validateDsl(dsl)
-console.log(result) // { valid: false, errors: ['DSL 的 data 字段必须是对象类型'] }
-```
-
-### 类型安全的 DSL 定义
-
-使用 `defineTypedDsl` 函数可以获得类型安全的 DSL 定义：
-
-```typescript
-import { defineTypedDsl } from '@zelpis/core'
-
-const dsl = defineTypedDsl({
-  title: 'Home Page',
-  data: { message: 'Hello' }
+export default defineDsl({
+  name: 'Home Page',
+  ...
 })
 ```
 

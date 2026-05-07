@@ -1,139 +1,70 @@
 # @zelpis/render
 
-`@zelpis/render` 是 Zelpis 框架的渲染引擎，支持客户端渲染（CSR）和服务端渲染（SSR），同时支持 React 和 Vue 框架。
+运行时渲染与 DSL 处理：`boot` 挂载 React/Vue 根组件；`renderPlugin` 在开发/构建中与 HTML、虚拟模块配合；`@zelpis/render/dsl` 提供定义与合并；`@zelpis/render/dsl/server` 提供 Node 环境下的 `loadDsl`。
 
 ## 安装
 
 ```bash
 pnpm add @zelpis/render
 ```
+## `boot(options)`
 
-## 核心功能
+- `framework`：`'react' | 'vue'`（必填）
+- `Component`：根组件（必填）
+- `type`：可选 `'csr' | 'ssr'`。在常见浏览器入口中，非 CSR 会打印警告并强制为 CSR；SSR 分支在 `import.meta.env.SSR` 且 `type !== 'csr'` 时走另一套 `render(props)` 返回值（见 `packages/render/src/boot.ts`）。
+- `mount`：可选，框架相关的根实例回调。
 
-### 1. 应用启动
+`boot` 本身用 `@zelpis/shared` 的 `once` 包装，多次调用返回同一结果。
 
-```typescript
-import { boot } from '@zelpis/render'
+客户端水合逻辑在 `src/hydrates/react.ts`、`vue.ts`，由 `boot` 内部动态 `import`；未在 `package.json` 的 `exports` 中暴露，业务代码请勿依赖 `@zelpis/render/hydrates/...` 深路径。
 
-export default boot({
-  framework: 'react',
-  Component: App
-})
-```
+## `renderPlugin(options?)`
 
-### 2. 客户端水合
+- `baseDir`：解析 `zelpis.entrys` 里 `entryPath`、`dslPath` 时使用的基准目录，默认 `process.cwd()`。
+- 插件会读取 Vite 配置上的 `config.zelpis`（类型为 `@zelpis/shared/html-config` 的 `ZElpisConfig`）；缺失会抛错。
+- 未写 `dslPath` 时，会默认解析为 `dirname(entryPath)/model`。
+- 提供虚拟模块 `virtual:zelpis/render-config`（内部解析 id 带 `\0` 前缀），用于在运行时注入合并后的配置。
 
-```typescript
-import { hydrate } from '@zelpis/render/hydrates/react'
+与 `@zelpis/builder` 的 `buildPlugin` 配合使用：构建插件负责多 HTML 入口，渲染插件负责 dev / 解析与 DSL 相关逻辑。
 
-hydrate('csr', <App />, props, mount)
-```
+## DSL API
 
-### 3. DSL 处理
+### `defineDsl(obj)`
 
-```typescript
-import { loadDsl, mergeDsl, defineDsl } from '@zelpis/render/dsl'
-```
+返回传入对象。`DSL` 接口当前为空对象类型，可在业务侧用 `satisfies` 或自管接口约束字段。
 
-## API 参考
+### `mergeDsl(target, ...sources)`
 
-### boot(options)
+合并：从 `target` 拷贝后依次 `Object.assign` 各 `source`，返回新对象。
 
-启动应用，根据配置选择 CSR 或 SSR 模式。
+### `loadDsl(modelDir, dslName)`（`@zelpis/render/dsl/server`）
 
-#### 参数
+- `modelDir`：DSL 根目录（或入口文件路径，内部会解析 `index.{ts,js,json}`）。
+- `dslName`：`string[]`，表示相对 `modelDir` 的路径段（如 `['taobao','shangou']`），用于逐级加载并合并子目录默认导出。
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `framework` | `'react' \| 'vue'` | 是 | 前端框架 |
-| `Component` | `(props: any) => any` | 是 | 根组件 |
-| `type` | `'csr' \| 'ssr'` | 否 | 渲染模式 |
-| `mount` | `(app: any) => void` | 否 | 挂载回调 |
+使用 jiti 在 Node 中执行 TS/JS/JSON 模块。
 
-#### 返回值
+## 源码目录
 
-- CSR 模式：返回 `{ option, render }`
-- SSR 模式：返回 `{ option, render(props) }`
-
-### hydrate(type, Component, props, mount)
-
-客户端水合函数，将组件渲染到 DOM。
-
-### loadDsl(modelDir, dslName)
-
-加载 DSL 配置文件。
-
-### mergeDsl(base, ...dsls)
-
-合并多个 DSL 对象。
-
-### defineDsl(obj)
-
-定义和验证 DSL 配置。
-
-## 渲染模式
-
-### CSR (客户端渲染)
-
-```typescript
-boot({
-  framework: 'react',
-  Component: App,
-  type: 'csr'
-})
-```
-
-### SSR (服务端渲染)
-
-```typescript
-boot({
-  framework: 'react',
-  Component: App,
-  type: 'ssr'
-})
-```
-
-## 框架支持
-
-### React
-
-```typescript
-import { hydrate } from '@zelpis/render/hydrates/react'
-```
-
-### Vue
-
-```typescript
-import { hydrate } from '@zelpis/render/hydrates/vue'
-```
-
-## 目录结构
-
-```
-packages/render/
-├── src/
-│   ├── dsl/
-│   │   ├── define.ts
-│   │   ├── index.ts
-│   │   ├── load.ts
-│   │   ├── merge.ts
-│   │   └── server.ts
-│   ├── hydrates/
-│   │   ├── react.ts
-│   │   └── vue.ts
-│   ├── plugins/
-│   │   ├── index.ts
-│   │   └── render-plugin.ts
-│   ├── boot.ts
+```text
+packages/render/src/
+├── boot.ts
+├── dsl/
+│   ├── define.ts
+│   ├── merge.ts
+│   ├── load.ts
+│   ├── server.ts      # 再导出 load
+│   └── index.ts       # define + merge
+├── hydrates/
+│   ├── react.ts
+│   └── vue.ts
+├── plugins/
+│   ├── render-plugin.ts
 │   └── index.ts
-├── package.json
-└── tsdown.config.ts
+└── index.ts
 ```
 
-## 依赖关系
+## 相关链接
 
-```
-@zelpis/render
-    └── @zelpis/shared
-```
-
+- [@zelpis/core](/packages/core)
+- [@zelpis/shared](/packages/shared)
