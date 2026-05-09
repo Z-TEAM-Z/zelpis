@@ -7,7 +7,6 @@
 ```bash
 pnpm add @zelpis/core
 ```
-源码对应：`packages/core/src/index.ts`、`plugins.ts`、`dsl.ts`、`builder.ts`。
 
 ## 典型用法
 
@@ -31,15 +30,14 @@ export default boot({
 `buildPlugin` 返回 `Promise<Plugin>`；在 Vite 的 `plugins` 数组中可直接放入该 Promise（由 Vite 解析），也可在 `defineConfig(async () => ({ ... }))` 里 `await` 后再组装。
 
 ```typescript
-import react from '@vitejs/plugin-react'
-import { buildPlugin, renderPlugin } from '@zelpis/core/plugins'
+import viteReact from '@vitejs/plugin-react'
+import { zelpisPlugin } from '@zelpis/core/plugins'
 import { defineConfig } from 'vite'
 
 export default defineConfig({
   plugins: [
-    react(),
-    buildPlugin(),
-    renderPlugin({ baseDir: './' }),
+    viteReact(),
+    zelpisPlugin({ render: { baseDir: './' } }),
   ],
   zelpis: {
     entrys: [

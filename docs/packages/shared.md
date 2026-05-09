@@ -1,6 +1,6 @@
 # @zelpis/shared
 
-跨包复用的轻量运行时工具与 HTML 配置 / 模板解析实现：主入口目前仅导出 `once`；与 Zelpis 配置、构建注入强相关的能力集中在 `@zelpis/shared/html-config`。
+跨包复用的轻量运行时工具与 HTML 配置 / 模板解析实现。
 
 ## 安装
 
@@ -10,81 +10,61 @@ pnpm add @zelpis/shared
 
 ## `once(fn)`
 
-返回包装函数：首次调用执行 `fn` 并缓存返回值，之后调用直接返回同一引用（实现见 `packages/shared/src/index.ts`）。
+返回包装函数：首次调用执行 `fn` 并缓存返回值，之后调用直接返回同一引用。
 
 ```typescript
 import { once } from '@zelpis/shared'
 
 const getClient = once(() => createExpensiveClient())
+
+// 第一次调用会执行 createExpensiveClient()
+const client1 = getClient()
+// 第二次调用直接返回缓存的结果
+const client2 = getClient()
+// client1 === client2
 ```
 
 ## `@zelpis/shared/html-config`
 
-### `resolveHtmlTemplate(options: ResolveHtmlOptions): string`
+HTML 配置解析与模板处理工具，主要用于构建时生成最终 HTML。
 
-| 字段 | 说明 |
-|------|------|
-| `entry` | 必填。含 `basePath`、`entryPath`、可选 `dslPath`、`html`、`dslEntrys`（多为内部填充） |
-| `defaultHtml` | 与 `entry.html` 合并的默认 `HtmlConfig` |
-| `rootDir` | 解析相对路径，默认 `process.cwd()` |
-| `replacements` | 占位符 → 字符串片段 |
-| `context` | 如 `entryPath`，用于解析/校验上下文 |
-| `validateLevel` | HTML 校验级别，默认 `'warn'` |
+### `resolveHtmlTemplate(options)`
+
+根据配置生成最终 HTML 字符串。
+
+**参数：**
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `entry` | `Entry` | ✅ | 入口配置，含 `basePath`、`entryPath`、可选 `dslPath`、`html` |
+| `defaultHtml` | `HtmlConfig` | ❌ | 与 `entry.html` 合并的默认配置 |
+| `rootDir` | `string` | ❌ | 解析相对路径，默认 `process.cwd()` |
+| `replacements` | `Record<string, string>` | ❌ | 占位符替换映射 |
+| `context` | `string` | ❌ | 解析/校验上下文 |
+| `validateLevel` | `false \| 'warn' \| 'strict'` | ❌ | HTML 校验级别，默认 `'warn'` |
 
 ### `HtmlConfig`
 
-与源码 `packages/shared/src/html-config/types.ts` 一致：
+HTML 配置接口：
 
-- `template`：自定义 HTML 模板文件路径  
-- `meta`：`title`、`description`、`keywords`、`viewport`、`charset`、`lang` 等  
-- `head`：`string[]`，插入 head 的原始片段  
-- `body`：`attributes`、`content`  
-- `custom`：非空时作为完整 HTML，跳过其它增强字段  
+- `template`：自定义 HTML 模板文件路径
+- `meta`：`title`、`description`、`keywords`、`viewport`、`charset`、`lang` 等
+- `head`：`string[]`，插入 head 的原始片段
+- `body`：`attributes`、`content`
+- `custom`：非空时作为完整 HTML，跳过其它增强字段
 
 ### `ZElpisConfig`
 
 Vite 根配置 `zelpis` 的类型：
 
-- `entrys`：`Omit<Entry, 'dslEntrys'>[]`（`dslEntrys` 由构建插件写入）  
-- `defaultHtml`：全局默认 HTML 片段  
-- `validateLevel`：校验级别  
+- `entrys`：入口配置数组（`dslEntrys` 由构建插件自动生成）
+- `defaultHtml`：全局默认 HTML 片段
+- `validateLevel`：校验级别
 
 ### 其它导出
 
-- `getInjectScript(entryPath, options?)`：生成注入到页面的脚本内容。  
-- `STANDARD_PLACEHOLDERS`：与模板 DOM 清理、占位符替换相关的常量（供 builder / render 与 `resolveHtmlTemplate` 对齐）。
-
-## 源码目录
-
-```text
-packages/shared/
-├── package.json
-├── tsdown.config.ts
-└── src/
-    ├── index.ts                          # 仅导出 once
-    └── html-config/
-        ├── index.ts                      # 对外聚合：resolveHtmlTemplate、getInjectScript、类型…
-        ├── types.ts                      # HtmlConfig、Entry、ZElpisConfig、ResolveHtmlOptions …
-        ├── resolve-html-template.ts      # 模板解析主流程、占位符流水线
-        ├── dom/
-        │   ├── index.ts
-        │   ├── parser.ts                 # parseHtml / serializeHtml
-        │   ├── element.ts                # 查改节点
-        │   ├── attribute.ts
-        │   └── content.ts                # body 内容替换等
-        ├── injection/
-        │   ├── index.ts
-        │   ├── placeholders.ts           # STANDARD_PLACEHOLDERS 等
-        │   ├── script-generator.ts       # getInjectScript
-        │   ├── script-merger.ts          # smartMergePlaceholders
-        │   └── script-cleaner.ts         # cleanAppInjectScriptDom
-        └── validation/
-            ├── index.ts
-            ├── types.ts                  # 校验结果类型
-            ├── validator.ts              # validateHtmlTemplate
-            ├── formatters.ts             # formatValidationOutput
-            └── messages.ts
-```
+- `getInjectScript(entryPath, options?)`：生成注入到页面的脚本内容
+- `STANDARD_PLACEHOLDERS`：模板占位符常量
 
 ## 相关链接
 

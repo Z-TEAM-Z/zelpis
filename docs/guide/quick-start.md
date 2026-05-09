@@ -2,7 +2,7 @@
 
 ## 新建 Vue 项目
 
-### 1. 脚手架与依赖
+### 1. 脚手架与依赖（注：在使用脚手架命令的时候会自动添加对应框架的依赖项和插件，一般无需手动添加）
 
 ```bash
 pnpm create vite my-zelpis-vue --template vue-ts
@@ -112,21 +112,21 @@ project/
 ├── public/
 ├── src/pages/
 │   └── react/
-│       ├── entry.ts
-│       └── model/
-│           └── index.ts
-├── template/                         # 模板层；vite alias 常映射为 @ / @template/shop
-│   ├── utils/                        # 与框架无关的工具（日志等）
-│   └── react/
-│       ├── app.tsx
-│       ├── index.tsx
-│       ├── layout/
-│       ├── router/
-│       ├── api/
-│       ├── components/
-│       ├── pages/
-│       ├── context/                  # 如 DSLProvider
-│       └── types/
+│   │   ├── entry.ts
+│   │    └── model/
+│   │       └── index.ts
+│   ├── template/                         # 模板层；vite alias 常映射为 @ / @template/shop
+│         ├── utils/                        # 与框架无关的工具（日志等）
+│         └── react/
+│         ├── app.tsx
+│         ├── index.tsx
+│         ├── layout/
+│         ├── router/
+│         ├── api/
+│         ├── components/
+│         ├── pages/
+│         ├── context/                  # 如 DSLProvider
+│         └── types/
 ├── vite.config.ts                    
 ├── tsconfig.json
 ├── package.json
