@@ -8,13 +8,13 @@ hero:
   actions:
     - theme: brand
       text: 快速开始
-      link: /guide/
+      link: /guide/installation/
     - theme: alt
       text: 查看示例
       link: /examples/
 
 features:
-  - icon: 🔄
+  - icon: 🌐
     title: 多框架支持
     details: 同时支持 React 和 Vue 框架，为开发者提供更多选择
   - icon: 🔄

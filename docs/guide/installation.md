@@ -7,7 +7,10 @@
 ## 环境要求
 
 与当前仓库根目录 `package.json` 保持一致（版本以后续仓库为准）：
-\| Vite | 作为业务项目的 devDependency 安装；版本需满足 `@zelpis/core` 对 `vite` 的 peer 要求（与框架发布说明或 npm 元数据一致）|
+
+| 工具 | 说明 |
+|------|------|
+| Vite | 作为业务项目的 devDependency 安装；版本需满足 `@zelpis/core` 对 `vite` 的 peer 要求（与框架发布说明或 npm 元数据一致）|
 
 ***
 
@@ -69,12 +72,12 @@ zelpisPlugin({
 
 每个 入口（`entrys` 中一项）常用字段：
 
-|字段          | 说明                                                                  ｜
-| ----------- | -------------------------------------------------------------------- |
-| `entryPath` | 调用 `boot` 的入口文件（如 `entry.ts`）                                        |
-| `basePath`  | 该入口对应的 URL 前缀（如 `/` 或 `/vue`）                                        |
-| `dslPath`   | DSL 模块目录；**可省略**，省略时默认为入口文件同目录下的 `model`（与 `@zelpis/render` 内解析逻辑一致） |
-| `html`      | 该入口的 HTML 片段配置（可选）                                                   |
+| 字段          | 说明
+| ----------- | --------------------------------------------------------------------
+| `entryPath` | 调用 `boot` 的入口文件（如 `entry.ts`）
+| `basePath`  | 该入口对应的 URL 前缀（如 `/` 或 `/vue`）
+| `dslPath`   | DSL 模块目录；**可省略**，省略时默认为入口文件同目录下的 `model`（与 `@zelpis/render` 内解析逻辑一致）
+| `html`      | 该入口的 HTML 片段配置（可选）
 
 全局还可配置 `defaultHtml`、`validateLevel` 等（类型见 `@zelpis/shared/html-config`）。
 
