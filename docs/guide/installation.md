@@ -72,12 +72,12 @@ zelpisPlugin({
 
 每个 入口（`entrys` 中一项）常用字段：
 
-| 字段          | 说明
-| ----------- | --------------------------------------------------------------------
-| `entryPath` | 调用 `boot` 的入口文件（如 `entry.ts`）
-| `basePath`  | 该入口对应的 URL 前缀（如 `/` 或 `/vue`）
-| `dslPath`   | DSL 模块目录；**可省略**，省略时默认为入口文件同目录下的 `model`（与 `@zelpis/render` 内解析逻辑一致）
-| `html`      | 该入口的 HTML 片段配置（可选）
+| 字段          | 说明 |
+| ----------- | -------------------------------------------------------------------- |
+| `entryPath` | 调用 `boot` 的入口文件（如 `entry.ts`） |
+| `basePath`  | 该入口对应的 URL 前缀（如 `/` 或 `/vue`） |
+| `dslPath`   | DSL 模块目录；**可省略**，省略时默认为入口文件同目录下的 `model`（与 `@zelpis/render` 内解析逻辑一致） |
+| `html`      | 该入口的 HTML 片段配置（可选） |
 
 全局还可配置 `defaultHtml`、`validateLevel` 等（类型见 `@zelpis/shared/html-config`）。
 
