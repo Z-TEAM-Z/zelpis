@@ -65,7 +65,7 @@ pnpm dev
 
 ### 项目结构
 
-```
+```text
 examples/vue-example/
 ├── model/                # 构建期 DSL 目录（由 vite 中 zelpis.entrys.dslPath 指向）
 │   ├── taobao/
@@ -111,9 +111,10 @@ pnpm dev
 ```
 
 # 在仓库根目录用 filter
+```bash
 pnpm --filter react-example dev
 pnpm --filter vue-example dev
-
+```
 ## 下一步
 
 - [快速开始](/guide/quick-start/)：了解如何快速创建一个 Zelpis 应用
