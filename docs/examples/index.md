@@ -6,7 +6,7 @@ Zelpis 提供了两个示例项目，展示如何在 React 和 Vue 中使用 Zel
 
 ### 项目结构
 
-```
+```text
 examples/react-example/
 ├── custom-component/     # 自定义组件
 │   ├── button.module.css

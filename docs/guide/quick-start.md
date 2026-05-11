@@ -41,27 +41,28 @@ export default defineConfig({
 
 project/
 ├── public/
-├── src/pages/
-│   ├── vue/
-│   │   ├── entry.ts                  # boot；registerApi / registerComponent；引用模板包
-│   │   └── model/
-│   │       └── index.ts              # dslPath；默认导出 DSL（字段由模板 types/dsl 约定）
-├── template/                         # 模板层；vite alias 常映射为 @ / @template/shop
-│   ├── utils/                        # 与框架无关的工具（日志等）
-│   ├── vue/
-│   │   ├── app.vue                   # 根组件：收 dsl、provide、RouterView
-│   │   ├── layout/
-│   │   ├── router/                   # 路由
-│   │   ├── api/                      # 请求封装、接口注册；与 model 里 apiMap 对齐
-│   │   ├── components/               # 通用组件；extend/ 可放 DSL 扩展组件映射
-│   │   ├── pages/
-│   │   ├── types/                    # 含 dsl.ts
-│   │   ├── constant/
-│   │   └── global.css
-├── vite.config.ts                    
+├── src/
+│   ├── pages/
+│   │   └── vue/
+│   │       ├── entry.ts              # boot；registerApi / registerComponent；引用模板包
+│   │       └── model/
+│   │           └── index.ts          # dslPath；默认导出 DSL（字段由模板 types/dsl 约定）
+│   ├── template/                     # 模板层，位于 src 下
+│   │   ├── utils/                    # 与框架无关的工具（日志等）
+│   │   └── vue/
+│   │       ├── app.vue               # 根组件：收 dsl、provide、RouterView
+│   │       ├── layout/
+│   │       ├── router/               # 路由
+│   │       ├── api/                  # 请求封装、接口注册；与 model 里 apiMap 对齐
+│   │       ├── components/           # 通用组件；extend/ 可放 DSL 扩展组件映射
+│   │       ├── pages/
+│   │       ├── types/                # 含 dsl.ts
+│   │       ├── constant/
+│   │       └── global.css
+├── vite.config.ts
 ├── tsconfig.json
 ├── package.json
-└── index.html    
+└── index.html
 
 ### 4. `pnpm dev` 本地端口
 http://localhost:5174/vue
@@ -110,27 +111,28 @@ export default defineConfig({
 
 project/
 ├── public/
-├── src/pages/
-│   └── react/
-│   │   ├── entry.ts
-│   │    └── model/
-│   │       └── index.ts
-│   ├── template/                         # 模板层；vite alias 常映射为 @ / @template/shop
-│         ├── utils/                        # 与框架无关的工具（日志等）
-│         └── react/
-│         ├── app.tsx
-│         ├── index.tsx
-│         ├── layout/
-│         ├── router/
-│         ├── api/
-│         ├── components/
-│         ├── pages/
-│         ├── context/                  # 如 DSLProvider
-│         └── types/
-├── vite.config.ts                    
+├── src/
+│   ├── pages/
+│   │   └── react/
+│   │       ├── entry.ts
+│   │       └── model/
+│   │           └── index.ts
+│   ├── template/                       # 模板层，位于 src 下
+│   │   ├── utils/                      # 与框架无关的工具（日志等）
+│   │   └── react/
+│   │       ├── app.tsx
+│   │       ├── index.tsx
+│   │       ├── layout/
+│   │       ├── router/
+│   │       ├── api/
+│   │       ├── components/
+│   │       ├── pages/
+│   │       ├── context/                # 如 DSLProvider
+│   │       └── types/
+├── vite.config.ts
 ├── tsconfig.json
 ├── package.json
-└── index.html    
+└── index.html
 
 
 ### 4. `pnpm dev` 本地端口
