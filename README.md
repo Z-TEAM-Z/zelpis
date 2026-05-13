@@ -1,4 +1,4 @@
-[![pkg.pr.new](https://pkg.pr.new/badge/Z-TEAM-Z/zelpis)](https://pkg.pr.new/~/Z-TEAM-Z/zelpis)】
+[![pkg.pr.new](https://pkg.pr.new/badge/Z-TEAM-Z/zelpis)](https://pkg.pr.new/~/Z-TEAM-Z/zelpis)
 
 # Zelpis
 
