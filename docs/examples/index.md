@@ -110,11 +110,10 @@ pnpm install
 pnpm dev
 ```
 
-# 在仓库根目录用 filter
+### 在仓库根目录用 filter
 ```bash
 pnpm --filter react-example dev
 pnpm --filter vue-example dev
 ```
 ## 下一步
-
-- [快速开始](/guide/quick-start/)：了解如何快速创建一个 Zelpis 应用
+- [快速开始](/guide/quick-start)：了解如何快速创建一个 Zelpis 应用
