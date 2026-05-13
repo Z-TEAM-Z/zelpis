@@ -94,14 +94,15 @@ HTML 配置接口，用于自定义生成的 HTML 文件。
 
 ```typescript
 import viteReact from '@vitejs/plugin-react'
-import { buildPlugin, renderPlugin } from '@zelpis/core/plugins'
+import { zelpisPlugin } from '@zelpis/core/plugins'
 import { defineConfig } from 'vite'
 
 export default defineConfig({
   plugins: [
     viteReact(),
-    buildPlugin(),
-    renderPlugin({ baseDir: './' }),
+    zelpisPlugin({
+      render: { baseDir: './' },
+    }),
   ],
   zelpis: {
     entrys: [
