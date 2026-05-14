@@ -160,6 +160,5 @@ project/
 
 ## 下一步
 
-- [快速开始](/guide/quick-start)
 - [示例项目](/examples/)
 

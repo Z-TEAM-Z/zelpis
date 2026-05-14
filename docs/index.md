@@ -14,22 +14,22 @@ hero:
       link: /examples/
 
 features:
-  - icon: 🌐
+  - icon: 🧩
     title: 多框架支持
     details: 同时支持 React 和 Vue 框架，为开发者提供更多选择
-  - icon: 🔄
+  - icon: 🖥️
     title: 多渲染模式
     details: 支持 CSR (客户端渲染) 和 SSR (服务端渲染)，满足不同场景需求
-  - icon: 📝
+  - icon: 📜
     title: DSL 驱动
     details: 通过 DSL 配置驱动前端渲染，减少重复代码，提高开发效率
-  - icon: 📦
+  - icon: 🧱
     title: 模块化设计
     details: 采用 monorepo 结构，各模块职责明确，易于扩展和维护
-  - icon: ⚡
+  - icon: 🚀
     title: 基于 Vite
     details: 使用 Vite 作为构建工具，提供快速的开发体验和优化的构建输出
-  - icon: 🛠️
+  - icon: 🔌
     title: 易于集成
     details: 与现有项目无缝集成，支持自定义配置和扩展
 ---

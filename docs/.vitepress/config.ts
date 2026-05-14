@@ -12,10 +12,10 @@ const GUIDES: DefaultTheme.NavItemWithLink[] = [
 ]
 
 const PACKAGES: DefaultTheme.NavItemWithLink[] = [
-  { text: 'Core', link: '/packages/core' },
-  { text: 'Builder', link: '/packages/builder' },
-  { text: 'Render', link: '/packages/render' },
-  { text: 'Shared', link: '/packages/shared' },
+  { text: '聚合器', link: '/packages/core' },
+  { text: '构建器', link: '/packages/builder' },
+  { text: '渲染器', link: '/packages/render' },
+  { text: '共享', link: '/packages/shared' },
 ]
 
 const EXAMPLES: DefaultTheme.NavItemWithLink[] = [
@@ -58,7 +58,7 @@ export default defineConfig({
         ],
       },
       {
-        text: '包',
+        text: '功能模块',
         items: [
           {
             items: PACKAGES,
@@ -110,6 +110,11 @@ export default defineConfig({
       provider: 'local',
     },
 
+    outline: {
+      label: '本页目录',
+      level: 'deep',
+    },
+
     socialLinks: [
       { icon: 'github', link: 'https://github.com/Z-TEAM-Z/zelpis' },
     ],
@@ -121,6 +126,7 @@ export default defineConfig({
   },
 
   head: [
+    ['link', { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' }],
     ['meta', { name: 'author', content: 'Zelpis Team' }],
     ['meta', { name: 'viewport', content: 'width=device-width, initial-scale=1.0, viewport-fit=cover' }],
   ],
