@@ -18,9 +18,9 @@
     "vite-tsconfig-paths": "catalog:dev",
     "vitepress": "catalog:docs",
     "vitepress-plugin-group-icons": "catalog:docs",
-    "vue": "catalog:frontend"
+    "vue": "catalog:frontend",
+    "vitepress-plugin-llms": "^1.12.2"
   },
   "dependencies": {
-    "vitepress-plugin-llms": "^1.12.2"
   }
 }
