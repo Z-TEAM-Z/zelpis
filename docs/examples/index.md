@@ -10,28 +10,28 @@ Zelpis 提供了两个示例项目，展示如何在 React 和 Vue 中使用 Zel
 examples/react-example/
 ├── custom-component/     # 自定义组件
 │   ├── button.module.css
-│   └── button.tsx
-├── model/                # DSL 配置
+│   └── button.tsx        # SchemaButton
+├── model/                # DSL（dslPath 指向此目录）
 │   ├── taobao/
 │   │   ├── shangou/
-│   │   │   └── index.ts  # 示例 DSL 配置
-│   │   └── index.ts      # 定义 DSL 配置
-│   └── index.ts          # 定义 DSL 配置
-├── remote-template/      # 应用壳：路由、页面、注册表（本仓库内本地模块，非运行时拉取远端）
-│   ├── pages/            # 页面
-│   │   ├── blog.tsx      # 其他应用页面
+│   │   │   └── index.ts  # 示例 defineDsl
+│   │   └── index.ts      # taobao 域
+│   └── index.ts          # DSL 入口
+├── remote-template/      # 路由 + 页面 + 注册表（本地模块）
+│   ├── pages/
+│   │   ├── blog.tsx      # /blog
 │   │   ├── home.module.css
-│   │   └── home.tsx      # 主应用页面
+│   │   └── home.tsx      # 首页，getComp 示例
 │   ├── router/
-│   │   └── index.tsx     # 路由配置
-│   ├── component-register.ts # 组件注册配置（定义组件注册和渲染）
-│   ├── context.tsx         # 上下文配置（定义全局状态和上下文）
-│   ├── index.ts
-│   └── main.tsx          # 应用入口
-├── entry.ts              # boot：挂载 Root，并 register 自定义组件
-├── index.html            # 应用入口 HTML 文件
+│   │   └── index.tsx     # Hash 路由
+│   ├── component-register.ts # register / getComp
+│   ├── context.tsx       # 渲染上下文 Provider
+│   ├── index.ts          # 导出 register、Root
+│   └── main.tsx          # 根组件：Router + Provider
+├── entry.ts              # boot + register
+├── index.html
 ├── package.json
-└── vite.config.ts
+└── vite.config.ts        # React 插件 + Zelpis entrys
 ```
 
 ### 核心文件
@@ -43,15 +43,17 @@ import { boot } from '@zelpis/core'
 import { Button } from './custom-component/button'
 import { register, Root } from './remote-template'
 
-// 注册自定义组件
 register('SchemaButton', Button)
 
-// 启动 Zelpis
 export default boot({
   framework: 'react',
   Component: Root,
 })
 ```
+
+#### vite.config.ts
+
+`buildPlugin` / `renderPlugin`，`zelpis.entrys` 见[安装与使用](/guide/installation)。
 
 ### 运行示例
 
@@ -61,28 +63,35 @@ pnpm install
 pnpm dev
 ```
 
+### 在仓库根目录用 filter
+
+```bash
+pnpm --filter react-example dev
+pnpm --filter vue-example dev
+```
+
 ## Vue 示例
 
 ### 项目结构
 
 ```text
 examples/vue-example/
-├── model/                # 构建期 DSL 目录（由 vite 中 zelpis.entrys.dslPath 指向）
+├── model/                # DSL（dslPath 指向此目录）
 │   ├── taobao/
 │   │   ├── shangou/
-│   │   │   └── index.ts
-│   │   └── index.ts
-│   └── index.ts
-├── pages/                # 页面组件
-│   ├── blog.vue
-│   └── home.vue
-├── router/               # 路由
-│   └── index.ts
-├── app.vue               # 根组件（示例中演示 window.$zelpis.hydrateData）
-├── entry.ts              # 应用入口，boot + 挂载 router
+│   │   │   └── index.ts  # 示例 defineDsl
+│   │   └── index.ts      # taobao 域
+│   └── index.ts          # DSL 入口
+├── pages/
+│   ├── blog.vue          # /blog
+│   └── home.vue          # 首页
+├── router/
+│   └── index.ts          # Hash 路由
+├── app.vue               # 根组件 + router-view；示例 hydrateData
+├── entry.ts              # boot + app.use(router)
 ├── index.html
 ├── package.json
-└── vite.config.ts        # vite 配置
+└── vite.config.ts        # Vue 插件 + Zelpis entrys
 ```
 
 ### 核心文件
@@ -102,6 +111,11 @@ export default boot({
   },
 })
 ```
+
+#### vite.config.ts
+
+`buildPlugin` / `renderPlugin`，`zelpis.entrys` 见[安装与使用](/guide/installation)。
+
 ### 运行示例
 
 ```bash
@@ -110,11 +124,12 @@ pnpm install
 pnpm dev
 ```
 
-# 在仓库根目录用 filter
+### 在仓库根目录用 filter
+
 ```bash
 pnpm --filter react-example dev
 pnpm --filter vue-example dev
 ```
-## 下一步
 
-- [快速开始](/guide/quick-start/)：了解如何快速创建一个 Zelpis 应用
+## 下一步
+- [快速开始](/guide/quick-start)：了解如何快速创建一个 Zelpis 应用

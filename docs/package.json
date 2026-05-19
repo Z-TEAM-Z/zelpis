@@ -19,5 +19,8 @@
     "vitepress": "catalog:docs",
     "vitepress-plugin-group-icons": "catalog:docs",
     "vue": "catalog:frontend"
+  },
+  "dependencies": {
+    "vitepress-plugin-llms": "^1.12.2"
   }
 }

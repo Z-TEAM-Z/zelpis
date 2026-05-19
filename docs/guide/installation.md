@@ -111,7 +111,7 @@ export default defineConfig({
 React 项目将 `vue()` 换成 `viteReact()`（`@vitejs/plugin-react`），其余 `zelpis` 结构相同。
 
 入口文件需 `export default boot({ ... })`
-详见 [快速开始](/guide/quick-start/) 与 [示例项目](/examples/)。
+详见 [快速开始](/guide/quick-start) 与 [示例项目](/examples/)。
 
 ***
 
@@ -160,6 +160,5 @@ project/
 
 ## 下一步
 
-- [快速开始](/guide/quick-start/)
 - [示例项目](/examples/)
 
