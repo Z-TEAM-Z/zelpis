@@ -1,8 +1,8 @@
 import type { DefaultTheme } from 'vitepress'
 import { transformerTwoslash } from '@shikijs/vitepress-twoslash'
 import { defineConfig } from 'vitepress'
-import { version } from '../../package.json'
 import llmstxt from 'vitepress-plugin-llms'
+import { version } from '../../package.json'
 import vite from './vite.config'
 
 const GUIDES: DefaultTheme.NavItemWithLink[] = [
@@ -103,7 +103,7 @@ export default defineConfig({
       ],
     },
     editLink: {
-      pattern: 'https://github.com/Z-TEAM-Z/zelpis',
+      pattern: 'https://github.com/Z-TEAM-Z/zelpis/edit/main/docs/:path',
       text: '建议修改此页面',
     },
     search: {
