@@ -1,6 +1,6 @@
 # @zelpis/core
 
-面向使用方的聚合包：在单一依赖下提供启动 API、Vite 插件组合入口，以及 DSL / Builder 的子路径再导出。
+面向使用方的聚合包：在单一依赖下提供启动 API、Vite 插件组合入口，以及 DSL / Builder 的子路径再导出，无需单独引入其他功能包。
 
 ## 安装
 
@@ -61,8 +61,12 @@ plugins: [...zelpisPlugin({ build: {}, render: { baseDir: './' } })]
 ```typescript
 import { defineDsl, mergeDsl } from '@zelpis/core/dsl'
 ```
-## 相关链接
+## 内置模块说明
 
-- [@zelpis/render](/packages/render)
-- [@zelpis/builder](/packages/builder)
-- [@zelpis/shared](/packages/shared)
+安装 `@zelpis/core` 即可使用全部能力；下列子包由依赖自动带入，一般无需单独安装。需要了解实现分工时可继续阅读：
+
+- [@zelpis/builder](/packages/builder) — 构建期 Vite 插件：扫描 DSL、生成多 HTML 入口
+- [@zelpis/render](/packages/render) — 运行时：`boot`、渲染插件与 DSL 定义/合并
+- [@zelpis/shared](/packages/shared) — 共享工具与 HTML 模板配置
+
+包文档总览见 [包文档概览](/packages/)。

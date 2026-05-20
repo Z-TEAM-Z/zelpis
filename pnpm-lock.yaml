@@ -88,6 +88,9 @@ catalogs:
     vitepress-plugin-group-icons:
       specifier: ^1.6.3
       version: 1.6.3
+    vitepress-plugin-llms:
+      specifier: ^1.12.2
+      version: 1.12.2
   frontend:
     '@unocss/reset':
       specifier: ^65.5.0
@@ -235,7 +238,7 @@ importers:
         specifier: catalog:docs
         version: 1.6.3(markdown-it@14.1.0)(vite@7.1.6(@types/node@22.18.6)(jiti@2.6.1)(tsx@4.20.5)(yaml@2.8.1))
       vitepress-plugin-llms:
-        specifier: ^1.12.2
+        specifier: catalog:docs
         version: 1.12.2
       vue:
         specifier: catalog:frontend

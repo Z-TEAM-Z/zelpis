@@ -144,8 +144,3 @@ project/
 ```text
 http://localhost:5174/react
 ```
-## 下一步
-
-- [安装指南](/guide/installation)
-- [DSL 说明](/guide/dsl)
-- [示例项目](/examples/)

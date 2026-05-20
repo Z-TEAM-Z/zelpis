@@ -1,4 +1,4 @@
-# 安装指南
+# 安装与使用
 
 本指南将帮助您：
 在业务项目中接入 `@zelpis/core`。
@@ -157,8 +157,3 @@ project/
 ├── package.json
 └── index.html                        
 ```
-
-## 下一步
-
-- [示例项目](/examples/)
-

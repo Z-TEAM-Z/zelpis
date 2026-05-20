@@ -8,14 +8,15 @@ import vite from './vite.config'
 const GUIDES: DefaultTheme.NavItemWithLink[] = [
   { text: '快速开始', link: '/guide/quick-start' },
   { text: '安装与使用', link: '/guide/installation' },
-  { text: 'DSL 语法', link: '/guide/dsl' },
+  { text: 'DSL 配置', link: '/guide/dsl' },
 ]
 
-const PACKAGES: DefaultTheme.NavItemWithLink[] = [
-  { text: '聚合器', link: '/packages/core' },
-  { text: '构建器', link: '/packages/builder' },
-  { text: '渲染器', link: '/packages/render' },
-  { text: '共享', link: '/packages/shared' },
+/** 侧栏：core 为入口，其余为内置模块说明 */
+const PACKAGE_SIDEBAR: DefaultTheme.NavItemWithLink[] = [
+  { text: '@zelpis/core', link: '/packages/core' },
+  { text: '@zelpis/builder', link: '/packages/builder' },
+  { text: '@zelpis/render', link: '/packages/render' },
+  { text: '@zelpis/shared', link: '/packages/shared' },
 ]
 
 const EXAMPLES: DefaultTheme.NavItemWithLink[] = [
@@ -57,14 +58,7 @@ export default defineConfig({
           },
         ],
       },
-      {
-        text: '功能模块',
-        items: [
-          {
-            items: PACKAGES,
-          },
-        ],
-      },
+      { text: '插件', link: '/packages/core' },
       {
         text: '示例',
         items: [
@@ -85,14 +79,14 @@ export default defineConfig({
           items: [
             { text: '快速开始', link: '/guide/quick-start' },
             { text: '安装与使用', link: '/guide/installation' },
-            { text: 'DSL 语法', link: '/guide/dsl' },
+            { text: 'DSL 配置', link: '/guide/dsl' },
           ],
         },
       ],
       '/packages/': [
         {
-          text: '包',
-          items: PACKAGES,
+          text: '插件',
+          items: PACKAGE_SIDEBAR,
         },
       ],
       '/examples/': [
