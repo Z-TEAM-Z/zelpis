@@ -1,4 +1,7 @@
 .cache
+# pnpm local store (created by pnpm install; do not commit)
+.pnpm-store
+pnpm-store
 .DS_Store
 .idea
 *.log

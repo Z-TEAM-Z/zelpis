@@ -23,7 +23,11 @@ const EXAMPLES: DefaultTheme.NavItemWithLink[] = [
   { text: '示例', link: '/examples/' },
 ]
 
+/** GitHub Pages 项目站：https://z-team-z.github.io/zelpis/ */
+const docBase = '/zelpis/'
+
 export default defineConfig({
+  base: docBase,
   title: 'Zelpis',
   description: '一个 DSL 驱动的跨框架前端渲染框架',
   ignoreDeadLinks: [
@@ -120,7 +124,7 @@ export default defineConfig({
   },
 
   head: [
-    ['link', { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' }],
+    ['link', { rel: 'icon', href: `${docBase}favicon.svg`, type: 'image/svg+xml' }],
     ['meta', { name: 'author', content: 'Zelpis Team' }],
     ['meta', { name: 'viewport', content: 'width=device-width, initial-scale=1.0, viewport-fit=cover' }],
   ],
