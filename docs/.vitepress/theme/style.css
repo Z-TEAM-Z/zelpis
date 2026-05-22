@@ -44,10 +44,10 @@
  * -------------------------------------------------------------------------- */
 
 :root {
-  --vp-c-brand-1: #5086a1;
-  --vp-c-brand-2: #6aa1b7;
-  --vp-c-brand-3: #8cccd5;
-  --vp-c-brand-soft: #83d0da50;
+  --vp-c-brand-1: #2563eb;
+  --vp-c-brand-2: #1d4ed8;
+  --vp-c-brand-3: #1e40af;
+  --vp-c-brand-soft: rgba(37, 99, 235, 0.14);
   --vp-c-bg-alt: #f9f9f9;
 
   --vp-c-yellow-1: #edb253;
@@ -60,10 +60,10 @@
 }
 
 .dark {
-  --vp-c-brand-1: #8cccd5;
-  --vp-c-brand-2: #6aa1b7;
-  --vp-c-brand-3: #5086a1;
-  --vp-c-brand-soft: #83d0da50;
+  --vp-c-brand-1: #60a5fa;
+  --vp-c-brand-2: #3b82f6;
+  --vp-c-brand-3: #2563eb;
+  --vp-c-brand-soft: rgba(96, 165, 250, 0.16);
   --vp-c-bg-alt: #18181b;
 
   --vp-c-yellow-1: #e6cc78;
@@ -98,9 +98,9 @@
 }
 
 :root {
-  -vp-c-text-1: rgba(42, 40, 47);
-  -vp-c-text-2: rgba(42, 40, 47, 0.78);
-  -vp-c-text-3: rgba(42, 40, 47, 0.56);
+  --vp-c-text-1: rgba(42, 40, 47);
+  --vp-c-text-2: rgba(42, 40, 47, 0.78);
+  --vp-c-text-3: rgba(42, 40, 47, 0.56);
   --black-text-1: rgba(42, 40, 47);
 }
 

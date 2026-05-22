@@ -10,8 +10,9 @@ pnpm add -D @zelpis/builder
 
 当前 `BuilderPluginOption` 为空接口；入口列表、HTML、校验级别等全部来自根配置的 `zelpis`（类型见 `@zelpis/shared/html-config` 的 `ZElpisConfig`）。
 
-## `buildPlugin(_option?)`
+## 核心功能
 
+### `buildPlugin(option?)`
 - 返回 `Promise<Plugin>`；通常直接写入 `plugins: [buildPlugin(), ...]`，由 Vite 处理 Promise；若需同步数组，可在 `defineConfig(async () => ...)` 中 `await buildPlugin()`。
 - `apply: 'build'`，仅参与生产构建，不在 dev server 单独承担 HTML 入口生成（dev 侧由 `@zelpis/render` 的插件等行为配合）。
 - 若未配置 `config.zelpis`，会在配置阶段报错：`Zelpis render config not found`。
