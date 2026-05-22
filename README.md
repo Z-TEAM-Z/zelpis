@@ -98,7 +98,7 @@ boot({
 
 #### React 组件
 
-```typescript
+```tsx
 // App.tsx
 import React from 'react'
 
@@ -162,7 +162,7 @@ import { defineDsl } from '@zelpis/core'
 
 export default defineDsl({
   name: 'Home Page',
-  ...
+  // ...more fields
 })
 ```
 
