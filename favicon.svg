@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="none" role="img" aria-label="Zelpis">
+  <defs>
+    <linearGradient id="zelpis-blue" x1="4" y1="4" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1e40af"/>
+      <stop offset="0.55" stop-color="#2563eb"/>
+      <stop offset="1" stop-color="#38bdf8"/>
+    </linearGradient>
+  </defs>
+  <rect x="2.5" y="2.5" width="27" height="27" rx="2" fill="#fff" stroke="url(#zelpis-blue)" stroke-width="2.25" stroke-linejoin="miter"/>
+  <path
+    d="M9 10.5h14M23 10.5 9 21.5M9 21.5h14"
+    stroke="url(#zelpis-blue)"
+    stroke-width="2.85"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>
