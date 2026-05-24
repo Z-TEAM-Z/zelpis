@@ -63,7 +63,7 @@ import{_ as i,i as a,o as n,an as e}from"./chunks/framework.DgMfJaRF.js";const o
 <span class="line"><span>│           ├── pages/</span></span>
 <span class="line"><span>│           ├── context/              # 如 DSLProvider</span></span>
 <span class="line"><span>│           └── types/</span></span>
-<span class="line"><span>├── vite.config.ts                    </span></span>
+<span class="line"><span>├── vite.config.ts</span></span>
 <span class="line"><span>├── tsconfig.json</span></span>
 <span class="line"><span>├── package.json</span></span>
 <span class="line"><span>└── index.html</span></span></code></pre></div>`,35)])])}const g=i(p,[["render",l]]);export{o as __pageData,g as default};
