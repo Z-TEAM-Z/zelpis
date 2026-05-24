@@ -152,8 +152,8 @@ project/
 │           ├── pages/
 │           ├── context/              # 如 DSLProvider
 │           └── types/
-├── vite.config.ts                    
+├── vite.config.ts
 ├── tsconfig.json
 ├── package.json
-└── index.html                        
+└── index.html
 ```

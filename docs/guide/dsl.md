@@ -50,7 +50,6 @@ export default boot({
 })
 ```
 
-
 ## 下一步
 
 - [示例项目](/examples/)：查看完整的示例项目
