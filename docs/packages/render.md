@@ -111,7 +111,7 @@ const pageDsl = mergeDsl(baseDsl, { title: 'Page', data: { b: 2 } })
 获取当前页面的 DSL（CSR）。直接读取 HTML 注入的 `window.$zelpis.hydrateData.dsl`。
 
 ```typescript
-import { getDsl } from '@zelpis/core/dsl'
+import { getDsl } from '@zelpis/render/dsl'
 
 const dsl = getDsl()
 ```
