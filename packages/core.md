@@ -62,7 +62,7 @@ plugins: [...zelpisPlugin({ build: {}, render: { baseDir: './' } })]
 ### DSL 工具
 
 ```typescript
-import { defineDsl, mergeDsl } from '@zelpis/core/dsl'
+import { defineDsl, mergeDsl, getDsl } from '@zelpis/core/dsl'
 ```
 
 ## 内置模块说明

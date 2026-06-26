@@ -442,7 +442,7 @@ plugins: [...zelpisPlugin({ build: {}, render: { baseDir: './' } })]
 ### DSL 工具
 
 ```typescript
-import { defineDsl, mergeDsl } from '@zelpis/core/dsl'
+import { defineDsl, mergeDsl, getDsl } from '@zelpis/core/dsl'
 ```
 
 ## 内置模块说明
@@ -630,6 +630,18 @@ const baseDsl = { title: 'Base', data: { a: 1 } }
 const pageDsl = mergeDsl(baseDsl, { title: 'Page', data: { b: 2 } })
 // 结果: { title: 'Page', data: { b: 2 } }
 ```
+
+### `getDsl()`
+
+获取当前页面的 DSL（CSR）。直接读取 HTML 注入的 `window.$zelpis.hydrateData.dsl`。
+
+```typescript
+import { getDsl } from '@zelpis/render/dsl'
+
+const dsl = getDsl()
+```
+
+后续若支持 SSR/SSG，需另行设计（Node 环境无 `window`，不能沿用当前实现）。
 
 ### `loadDsl(modelDir, dslName)`（`@zelpis/render/dsl/server`）
 
