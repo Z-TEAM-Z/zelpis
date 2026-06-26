@@ -8,3 +8,12 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv
 }
+
+interface Window {
+  $zelpis: {
+    hydrateData: {
+      dsl?: Record<string, unknown>
+      [key: string]: unknown
+    }
+  }
+}

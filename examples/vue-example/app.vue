@@ -1,10 +1,11 @@
 <script setup>
-const data = window.$zelpis.hydrateData
+import { getDsl } from '@zelpis/core/dsl'
+const url = getDsl()
 </script>
 
 <template>
   <div>
-    123 {{ data }}
+    123 {{ url }}
     <router-view />
   </div>
 </template>

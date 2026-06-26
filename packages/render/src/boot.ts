@@ -84,7 +84,6 @@ function csrRenderer(option: BootOption): { option: BootOption, render: () => { 
   option.type = 'csr'
 
   const csrRender = async (): Promise<void> => {
-    // @ts-expect-error any
     const props = { ...window.$zelpis.hydrateData }
     const Comp = await createComponent(framework, Component, props, option)
     if (framework === 'react') {

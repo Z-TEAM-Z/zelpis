@@ -106,6 +106,18 @@ const pageDsl = mergeDsl(baseDsl, { title: 'Page', data: { b: 2 } })
 // 结果: { title: 'Page', data: { b: 2 } }
 ```
 
+### `getDsl()`
+
+获取当前页面的 DSL（CSR）。直接读取 HTML 注入的 `window.$zelpis.hydrateData.dsl`。
+
+```typescript
+import { getDsl } from '@zelpis/render/dsl'
+
+const dsl = getDsl()
+```
+
+后续若支持 SSR/SSG，需另行设计（Node 环境无 `window`，不能沿用当前实现）。
+
 ### `loadDsl(modelDir, dslName)`（`@zelpis/render/dsl/server`）
 
 Node 环境下加载 DSL 模块，用于构建时解析 DSL 配置。
